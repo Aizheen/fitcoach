@@ -5,8 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search } from 'lucide-react'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Check, ChevronsUpDown, Plus } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface IngredientSelectorProps {
     onAdd: (ingredient: any, quantity: number) => void
@@ -14,19 +16,13 @@ interface IngredientSelectorProps {
 
 export function IngredientSelector({ onAdd }: IngredientSelectorProps) {
     const [ingredients, setIngredients] = useState<any[]>([])
-    const [filteredIngredients, setFilteredIngredients] = useState<any[]>([])
-    const [searchTerm, setSearchTerm] = useState('')
-    const [selectedCategory, setSelectedCategory] = useState<string>('all')
+    const [open, setOpen] = useState(false)
     const [selectedIngredient, setSelectedIngredient] = useState<any>(null)
     const [quantity, setQuantity] = useState('')
 
     useEffect(() => {
         fetchIngredients()
     }, [])
-
-    useEffect(() => {
-        filterIngredients()
-    }, [searchTerm, selectedCategory, ingredients])
 
     const fetchIngredients = async () => {
         const supabase = createClient()
@@ -37,24 +33,7 @@ export function IngredientSelector({ onAdd }: IngredientSelectorProps) {
 
         if (data) {
             setIngredients(data)
-            setFilteredIngredients(data)
         }
-    }
-
-    const filterIngredients = () => {
-        let filtered = ingredients
-
-        if (selectedCategory !== 'all') {
-            filtered = filtered.filter(ing => ing.category === selectedCategory)
-        }
-
-        if (searchTerm) {
-            filtered = filtered.filter(ing =>
-                ing.name.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-        }
-
-        setFilteredIngredients(filtered)
     }
 
     const handleAdd = () => {
@@ -62,97 +41,108 @@ export function IngredientSelector({ onAdd }: IngredientSelectorProps) {
             onAdd(selectedIngredient, parseFloat(quantity))
             setSelectedIngredient(null)
             setQuantity('')
-            setSearchTerm('')
         }
     }
 
-    const categories = Array.from(new Set(ingredients.map(ing => ing.category).filter(Boolean)))
+    // Calculate macros for selected ingredient with current quantity
+    const calculateMacros = () => {
+        if (!selectedIngredient || !quantity) return null
+        const factor = parseFloat(quantity) / 100
+        return {
+            kcal: Math.round((selectedIngredient.kcal_100g || 0) * factor),
+            protein: Math.round((selectedIngredient.protein_100g || 0) * factor),
+            carbs: Math.round((selectedIngredient.carbs_100g || 0) * factor),
+            fat: Math.round((selectedIngredient.fat_100g || 0) * factor),
+        }
+    }
+
+    const macros = calculateMacros()
 
     return (
-        <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-            <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4">
+            <div className="grid grid-cols-[2fr_1fr_auto] gap-4 items-end">
                 <div className="space-y-2">
-                    <Label>Categoría</Label>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Todas" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todas las categorías</SelectItem>
-                            {categories.map(cat => (
-                                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Buscar ingrediente</Label>
-                    <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Nombre..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-8"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label>Ingrediente</Label>
-                <Select
-                    value={selectedIngredient?.id || ''}
-                    onValueChange={(value) => {
-                        const ing = filteredIngredients.find(i => i.id === value)
-                        setSelectedIngredient(ing)
-                    }}
-                >
-                    <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar ingrediente" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                        {filteredIngredients.map(ing => (
-                            <SelectItem key={ing.id} value={ing.id}>
-                                {ing.name} {ing.state && `(${ing.state})`} - {ing.kcal_100g} kcal
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-
-            {selectedIngredient && (
-                <div className="space-y-4">
-                    <div className="p-3 bg-background rounded border">
-                        <p className="text-sm font-medium">{selectedIngredient.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                            Por 100g: {selectedIngredient.kcal_100g} kcal | P: {selectedIngredient.protein_100g}g | C: {selectedIngredient.carbs_100g}g | G: {selectedIngredient.fat_100g}g
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="quantity">Cantidad (gramos) *</Label>
-                            <Input
-                                id="quantity"
-                                type="number"
-                                value={quantity}
-                                onChange={(e) => setQuantity(e.target.value)}
-                                placeholder="100"
-                                min="1"
-                            />
-                        </div>
-                        <div className="flex items-end">
+                    <Label>Nombre del ingrediente</Label>
+                    <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger asChild>
                             <Button
-                                type="button"
-                                onClick={handleAdd}
-                                className="w-full"
-                                disabled={!quantity || parseFloat(quantity) <= 0}
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={open}
+                                className="w-full justify-between"
                             >
-                                Agregar
+                                {selectedIngredient ? selectedIngredient.name : "Seleccionar ingrediente"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
-                        </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0">
+                            <Command>
+                                <CommandInput placeholder="Buscar ingrediente..." />
+                                <CommandEmpty>No se encontraron ingredientes.</CommandEmpty>
+                                <CommandGroup className="max-h-[300px] overflow-y-auto">
+                                    {ingredients.map((ing) => (
+                                        <CommandItem
+                                            key={ing.id}
+                                            value={`${ing.name} ${ing.state || ''}`}
+                                            onSelect={() => {
+                                                setSelectedIngredient(ing)
+                                                setOpen(false)
+                                            }}
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    selectedIngredient?.id === ing.id ? "opacity-100" : "opacity-0"
+                                                )}
+                                            />
+                                            {ing.name} {ing.state && `(${ing.state})`}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="quantity">Cantidad (g)</Label>
+                    <Input
+                        id="quantity"
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        placeholder="100"
+                        min="1"
+                    />
+                </div>
+
+                <Button
+                    type="button"
+                    onClick={handleAdd}
+                    disabled={!selectedIngredient || !quantity || parseFloat(quantity) <= 0}
+                    className="bg-primary hover:bg-primary/90 text-white h-10 w-10 p-0"
+                >
+                    <Plus className="h-5 w-5" />
+                </Button>
+            </div>
+
+            {macros && (
+                <div className="grid grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
+                    <div>
+                        <p className="text-xs text-muted-foreground">Kcal</p>
+                        <p className="text-lg font-semibold">{macros.kcal}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-muted-foreground">Proteína (g)</p>
+                        <p className="text-lg font-semibold">{macros.protein}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-muted-foreground">Carbs (g)</p>
+                        <p className="text-lg font-semibold">{macros.carbs}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-muted-foreground">Grasas (g)</p>
+                        <p className="text-lg font-semibold">{macros.fat}</p>
                     </div>
                 </div>
             )}

@@ -5,8 +5,6 @@ import { revalidatePath } from 'next/cache'
 
 export async function createRecipeAction(data: {
     name: string
-    description: string
-    meal_type: string
     ingredients: any[]
 }) {
     const supabase = await createClient()
@@ -19,11 +17,17 @@ export async function createRecipeAction(data: {
         return { error: 'No autorizado' }
     }
 
+    if (!data.name || !data.name.trim()) {
+        return { error: 'El nombre es requerido' }
+    }
+
+    if (!data.ingredients || data.ingredients.length === 0) {
+        return { error: 'Debe agregar al menos un ingrediente' }
+    }
+
     const { error } = await supabase.from('recipes').insert({
         trainer_id: user.id,
-        name: data.name,
-        description: data.description || null,
-        meal_type: data.meal_type || null,
+        name: data.name.trim(),
         ingredients_data: data.ingredients,
     })
 

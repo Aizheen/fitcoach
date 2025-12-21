@@ -6,8 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { IngredientSelector } from './ingredient-selector'
 
 interface SelectedIngredient {
@@ -25,6 +24,7 @@ export function AddRecipeDialog() {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([])
+    const [recipeName, setRecipeName] = useState('')
     const router = useRouter()
 
     const handleAddIngredient = (ingredient: any, quantity: number) => {
@@ -48,13 +48,10 @@ export function AddRecipeDialog() {
         e.preventDefault()
         setLoading(true)
 
-        const formData = new FormData(e.currentTarget)
         const { createRecipeAction } = await import('@/app/(dashboard)/recipes/actions')
 
         const result = await createRecipeAction({
-            name: formData.get('name') as string,
-            description: formData.get('description') as string,
-            meal_type: formData.get('meal_type') as string,
+            name: recipeName,
             ingredients: selectedIngredients,
         })
 
@@ -63,6 +60,7 @@ export function AddRecipeDialog() {
         } else {
             setOpen(false)
             setSelectedIngredients([])
+            setRecipeName('')
             router.refresh()
         }
         setLoading(false)
@@ -72,10 +70,10 @@ export function AddRecipeDialog() {
     const totalMacros = selectedIngredients.reduce((totals, ing) => {
         const factor = ing.quantity_grams / 100
         return {
-            kcal: totals.kcal + ing.kcal_100g * factor,
-            protein: totals.protein + ing.protein_100g * factor,
-            carbs: totals.carbs + ing.carbs_100g * factor,
-            fat: totals.fat + ing.fat_100g * factor,
+            kcal: totals.kcal + (ing.kcal_100g || 0) * factor,
+            protein: totals.protein + (ing.protein_100g || 0) * factor,
+            carbs: totals.carbs + (ing.carbs_100g || 0) * factor,
+            fat: totals.fat + (ing.fat_100g || 0) * factor,
         }
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 })
 
@@ -83,51 +81,32 @@ export function AddRecipeDialog() {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button className="bg-primary hover:bg-primary/90 text-white">
-                    <Plus className="mr-2 h-4 w-4" /> Nueva receta
+                    <Plus className="mr-2 h-4 w-4" /> Añadir ingrediente
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Nueva receta</DialogTitle>
-                    <DialogDescription>
-                        Creá una plantilla de comida para reutilizar en las dietas
-                    </DialogDescription>
+                    <DialogTitle>
+                        <Input
+                            value={recipeName}
+                            onChange={(e) => setRecipeName(e.target.value)}
+                            placeholder="Nombre del plato"
+                            className="text-lg font-semibold border-none p-0 h-auto focus-visible:ring-0"
+                        />
+                    </DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Nombre de la receta *</Label>
-                        <Input id="name" name="name" placeholder="Ej: Pollo con arroz y verduras" required />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Descripción (opcional)</Label>
-                        <Input id="description" name="description" placeholder="Instrucciones de preparación..." />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="meal_type">Tipo de comida</Label>
-                        <Select name="meal_type">
-                            <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="breakfast">Desayuno</SelectItem>
-                                <SelectItem value="lunch">Almuerzo</SelectItem>
-                                <SelectItem value="dinner">Cena</SelectItem>
-                                <SelectItem value="snack">Snack</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="border-t pt-4">
-                        <h4 className="font-semibold mb-3">Ingredientes</h4>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <h3 className="text-lg font-semibold mb-4">Ingredientes del plato</h3>
                         <IngredientSelector onAdd={handleAddIngredient} />
+                    </div>
 
-                        {selectedIngredients.length > 0 && (
-                            <div className="mt-4 space-y-2">
+                    {selectedIngredients.length > 0 && (
+                        <div className="border rounded-lg p-6 min-h-[200px] bg-muted/20">
+                            <div className="space-y-3">
                                 {selectedIngredients.map((ing, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                    <div key={index} className="flex items-center justify-between p-3 bg-background rounded-lg border">
                                         <div className="flex-1">
                                             <p className="font-medium">{ing.name}</p>
                                             <p className="text-sm text-muted-foreground">{ing.quantity_grams}g</p>
@@ -135,51 +114,49 @@ export function AddRecipeDialog() {
                                         <Button
                                             type="button"
                                             variant="ghost"
-                                            size="sm"
+                                            size="icon"
                                             onClick={() => handleRemoveIngredient(index)}
+                                            className="hover:bg-destructive/10"
                                         >
-                                            Eliminar
+                                            <X className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 ))}
                             </div>
-                        )}
-                    </div>
-
-                    {selectedIngredients.length > 0 && (
-                        <div className="border-t pt-4">
-                            <h4 className="font-semibold mb-3">Totales</h4>
-                            <div className="grid grid-cols-4 gap-4">
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Calorías</p>
-                                    <p className="text-xl font-bold">{Math.round(totalMacros.kcal)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Proteínas</p>
-                                    <p className="text-xl font-bold">{Math.round(totalMacros.protein)}g</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Carbos</p>
-                                    <p className="text-xl font-bold">{Math.round(totalMacros.carbs)}g</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Grasas</p>
-                                    <p className="text-xl font-bold">{Math.round(totalMacros.fat)}g</p>
-                                </div>
-                            </div>
                         </div>
                     )}
 
-                    <div className="flex justify-end gap-3 mt-6">
+                    <div className="border-t pt-4">
+                        <div className="grid grid-cols-4 gap-6">
+                            <div>
+                                <p className="text-sm text-muted-foreground mb-1">Calorías totales</p>
+                                <p className="text-2xl font-bold">{Math.round(totalMacros.kcal)} kcal</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground mb-1">Proteínas</p>
+                                <p className="text-2xl font-bold">{Math.round(totalMacros.protein).toFixed(1)} g</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground mb-1">Carbohidratos</p>
+                                <p className="text-2xl font-bold">{Math.round(totalMacros.carbs).toFixed(1)} g</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground mb-1">Grasas</p>
+                                <p className="text-2xl font-bold">{Math.round(totalMacros.fat).toFixed(1)} g</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex jutify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                            Cancelar
+                            Cerrar
                         </Button>
                         <Button
                             type="submit"
-                            disabled={loading || selectedIngredients.length === 0}
+                            disabled={loading || selectedIngredients.length === 0 || !recipeName.trim()}
                             className="bg-primary text-white hover:bg-primary/90"
                         >
-                            {loading ? 'Guardando...' : 'Crear receta'}
+                            {loading ? 'Guardando...' : 'Guardar plato'}
                         </Button>
                     </div>
                 </form>
