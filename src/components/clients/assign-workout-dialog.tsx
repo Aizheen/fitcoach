@@ -18,47 +18,62 @@ import { cn } from '@/lib/utils'
 
 interface AssignWorkoutDialogProps {
     clientId: string
-    existingWorkout?: any // If provided, it's edit mode
-    trigger?: React.ReactNode // Custom trigger button
+    existingWorkout?: any
+    trigger?: React.ReactNode
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
-export function AssignWorkoutDialog({ clientId, existingWorkout, trigger }: AssignWorkoutDialogProps) {
-    const [open, setOpen] = useState(false)
+const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+
+export function AssignWorkoutDialog({
+    clientId,
+    existingWorkout,
+    trigger,
+    open: controlledOpen,
+    onOpenChange: setControlledOpen
+}: AssignWorkoutDialogProps) {
+    const [internalOpen, setInternalOpen] = useState(false)
+
+    // Derived state for open status
+    const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen
+    const setOpen = (val: boolean) => {
+        setInternalOpen(val)
+        if (setControlledOpen) setControlledOpen(val)
+    }
+
     const [step, setStep] = useState<'select' | 'edit'>('select')
     const [loading, setLoading] = useState(false)
 
-    // Templates state
+    // Templates
     const [templates, setTemplates] = useState<any[]>([])
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
 
-    // Editor state
+    // Editor
     const [workoutName, setWorkoutName] = useState('')
     const [exercises, setExercises] = useState<any[]>([])
     const [validUntil, setValidUntil] = useState<Date | undefined>(undefined)
+    const [scheduledDays, setScheduledDays] = useState<string[]>([])
 
     useEffect(() => {
-        if (open) {
+        if (isOpen) {
             if (existingWorkout) {
-                // Edit mode: Load existing data
                 setWorkoutName(existingWorkout.name)
                 setExercises(Array.isArray(existingWorkout.structure) ? JSON.parse(JSON.stringify(existingWorkout.structure)) : [])
                 setValidUntil(existingWorkout.valid_until ? new Date(existingWorkout.valid_until) : undefined)
+                setScheduledDays(existingWorkout.scheduled_days || [])
                 setStep('edit')
             } else {
-                // New mode
                 fetchTemplates()
                 setStep('select')
                 resetEditor()
             }
         }
-    }, [open, existingWorkout])
+    }, [isOpen, existingWorkout])
 
     const fetchTemplates = async () => {
         const supabase = createClient()
-        const { data } = await supabase
-            .from('workouts')
-            .select('*')
-            .order('name')
+        const { data } = await supabase.from('workouts').select('*').order('name')
         if (data) setTemplates(data)
     }
 
@@ -67,11 +82,19 @@ export function AssignWorkoutDialog({ clientId, existingWorkout, trigger }: Assi
         setExercises([])
         setSelectedTemplateId('')
         setValidUntil(undefined)
+        setScheduledDays([])
+    }
+
+    const toggleDay = (day: string) => {
+        setScheduledDays(prev =>
+            prev.includes(day)
+                ? prev.filter(d => d !== day)
+                : [...prev, day]
+        )
     }
 
     const handleSelectTemplate = () => {
         if (!selectedTemplateId) return
-
         const template = templates.find(t => t.id === selectedTemplateId)
         if (template) {
             setWorkoutName(template.name)
@@ -102,12 +125,12 @@ export function AssignWorkoutDialog({ clientId, existingWorkout, trigger }: Assi
 
     const handleSave = async () => {
         setLoading(true)
-
         const payload = {
             clientId,
             name: workoutName,
             exercises,
-            validUntil: validUntil ? format(validUntil, 'yyyy-MM-dd') : undefined
+            validUntil: validUntil ? format(validUntil, 'yyyy-MM-dd') : undefined,
+            scheduledDays
         }
 
         let result
@@ -132,10 +155,10 @@ export function AssignWorkoutDialog({ clientId, existingWorkout, trigger }: Assi
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger ? trigger : (
-                    <Button className="bg-primary hover:bg-primary/90 text-white">
+                    <Button className="bg-orange-600 hover:bg-orange-700 text-white">
                         <Plus className="mr-2 h-4 w-4" /> Asignar Rutina
                     </Button>
                 )}
@@ -166,22 +189,13 @@ export function AssignWorkoutDialog({ clientId, existingWorkout, trigger }: Assi
                                 </SelectContent>
                             </Select>
                         </div>
-
                         <div className="flex flex-col gap-3">
-                            <Button
-                                onClick={handleSelectTemplate}
-                                disabled={!selectedTemplateId}
-                                className="w-full"
-                            >
+                            <Button onClick={handleSelectTemplate} disabled={!selectedTemplateId} className="w-full">
                                 Continuar con plantilla seleccionada
                             </Button>
                             <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t" />
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-background px-2 text-muted-foreground">O</span>
-                                </div>
+                                <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                                <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">O</span></div>
                             </div>
                             <Button variant="outline" onClick={handleCreateEmpty} className="w-full">
                                 Crear desde cero (Vacío)
@@ -201,36 +215,43 @@ export function AssignWorkoutDialog({ clientId, existingWorkout, trigger }: Assi
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Nombre de la Rutina</Label>
-                                <Input
-                                    value={workoutName}
-                                    onChange={(e) => setWorkoutName(e.target.value)}
-                                />
+                                <Input value={workoutName} onChange={(e) => setWorkoutName(e.target.value)} />
                             </div>
 
                             <div className="space-y-2 flex flex-col">
                                 <Label>Válida hasta (Opcional)</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                                "w-full justify-start text-left font-normal",
-                                                !validUntil && "text-muted-foreground"
-                                            )}
-                                        >
+                                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !validUntil && "text-muted-foreground")}>
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                             {validUntil ? format(validUntil, "PPP", { locale: es }) : <span>Seleccionar fecha</span>}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={validUntil}
-                                            onSelect={setValidUntil}
-                                            initialFocus
-                                        />
+                                        <Calendar mode="single" selected={validUntil} onSelect={setValidUntil} initialFocus />
                                     </PopoverContent>
                                 </Popover>
+                            </div>
+                        </div>
+
+                        {/* Day Selector */}
+                        <div className="space-y-2">
+                            <Label>Días asignados</Label>
+                            <div className="flex flex-wrap gap-2">
+                                {DAYS.map(day => (
+                                    <Button
+                                        key={day}
+                                        type="button"
+                                        variant={scheduledDays.includes(day) ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => toggleDay(day)}
+                                        className={cn(
+                                            scheduledDays.includes(day) ? "bg-orange-600 hover:bg-orange-700 text-white" : ""
+                                        )}
+                                    >
+                                        {day}
+                                    </Button>
+                                ))}
                             </div>
                         </div>
 
@@ -248,19 +269,12 @@ export function AssignWorkoutDialog({ clientId, existingWorkout, trigger }: Assi
                                                 {ex.rest && <span>{ex.rest}s descanso</span>}
                                             </div>
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleRemoveExercise(index)}
-                                            className="h-8 w-8 text-destructive"
-                                        >
+                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveExercise(index)} className="h-8 w-8 text-destructive">
                                             <X className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 ))}
-                                {exercises.length === 0 && (
-                                    <p className="text-sm text-muted-foreground text-center py-2">Lista vacía</p>
-                                )}
+                                {exercises.length === 0 && <p className="text-sm text-muted-foreground text-center py-2">Lista vacía</p>}
                             </div>
 
                             <div className="pt-2">

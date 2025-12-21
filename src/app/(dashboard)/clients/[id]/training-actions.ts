@@ -9,6 +9,7 @@ export async function assignWorkoutAction(data: {
     exercises: any[]
     originTemplateId?: string
     validUntil?: string
+    scheduledDays?: string[]
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -24,7 +25,8 @@ export async function assignWorkoutAction(data: {
         structure: data.exercises,
         origin_template_id: data.originTemplateId || null,
         is_customized: true,
-        valid_until: data.validUntil || null
+        valid_until: data.validUntil || null,
+        scheduled_days: data.scheduledDays || []
     })
 
     if (error) {
@@ -42,6 +44,7 @@ export async function updateAssignedWorkoutAction(data: {
     name: string
     exercises: any[]
     validUntil?: string
+    scheduledDays?: string[]
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -54,10 +57,11 @@ export async function updateAssignedWorkoutAction(data: {
         .update({
             name: data.name,
             structure: data.exercises,
-            valid_until: data.validUntil || null
+            valid_until: data.validUntil || null,
+            scheduled_days: data.scheduledDays || []
         })
         .eq('id', data.id)
-        .eq('trainer_id', user.id) // Security check
+        .eq('trainer_id', user.id)
 
     if (error) {
         console.error('Error updating workout:', error)
