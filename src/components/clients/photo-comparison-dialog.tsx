@@ -51,6 +51,7 @@ export function PhotoComparisonDialog({ photos }: PhotoComparisonDialogProps) {
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-[90vw] h-[90vh] flex flex-col p-0 gap-0 bg-background text-foreground">
+                <DialogTitle className="sr-only">Comparación de Fotos</DialogTitle>
                 <div className="flex flex-1 overflow-hidden">
                     {/* Sidebar Selection */}
                     <div className="w-[300px] border-r overflow-y-auto p-4 space-y-4 bg-muted/10 hidden md:block">
