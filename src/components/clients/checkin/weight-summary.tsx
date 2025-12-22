@@ -1,0 +1,33 @@
+interface WeightSummaryProps {
+    current: number | null
+    start: number | null
+    target: number | null
+}
+
+export function WeightSummary({ current, start, target }: WeightSummaryProps) {
+    return (
+        <div className="bg-white rounded-xl border border-muted/60 shadow-sm p-6 mb-6">
+            <h3 className="text-base font-semibold mb-4">Peso</h3>
+            <div className="flex gap-12">
+                <div>
+                    <div className="text-3xl font-bold tracking-tight">
+                        {current ? `${current}kg` : "—"}
+                    </div>
+                    <div className="text-sm text-muted-foreground font-medium mt-1">Actual</div>
+                </div>
+                <div>
+                    <div className="text-3xl font-bold tracking-tight text-foreground/90">
+                        {target ? `${target}kg` : "—"}
+                    </div>
+                    <div className="text-sm text-muted-foreground font-medium mt-1">Meta</div>
+                </div>
+                <div>
+                    <div className="text-3xl font-bold tracking-tight text-foreground/90">
+                        {start ? `${start}kg` : "—"}
+                    </div>
+                    <div className="text-sm text-muted-foreground font-medium mt-1">Comenzo</div>
+                </div>
+            </div>
+        </div>
+    )
+}
