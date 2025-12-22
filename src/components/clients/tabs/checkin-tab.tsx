@@ -8,6 +8,7 @@ import { MeasuresTable } from '@/components/clients/checkin/measures-table'
 import { WeightSummary } from '@/components/clients/checkin/weight-summary'
 import { WeightChart } from '@/components/clients/checkin/weight-chart'
 import { HistoryTable } from '@/components/clients/checkin/history-table'
+import { EditTargetDialog } from '@/components/clients/checkin/edit-target-dialog'
 
 export const METRICS_CONFIG: Record<string, { label: string, unit: string }> = {
     weight: { label: 'Peso', unit: 'kg' },
@@ -44,6 +45,35 @@ export function CheckinTab({ client }: { client: any }) {
         }
     }
 
+    const [isEditTargetOpen, setIsEditTargetOpen] = useState(false)
+    const [localTargets, setLocalTargets] = useState<Record<string, number>>({})
+
+    // Initial load of targets from client prop if available, or fetch freshly
+    // Ideally we should sync this. For now let's assume client prop has it or we rely on revalidate.
+    // But since 'targets' is new, we might need to fetch it in fetchCheckins or a new fetchClient.
+    // Let's create a fetchClientDetails function to cover ourselves.
+
+    const fetchClientDetails = async () => {
+        const supabase = createClient()
+        const { data } = await supabase
+            .from('clients')
+            .select('target_weight, target_fat, targets')
+            .eq('id', client.id)
+            .single()
+
+        if (data) {
+            // Merge all into a unified structure for easier access
+            const merged = { ...data.targets, weight: data.target_weight, body_fat: data.target_fat }
+            setLocalTargets(merged)
+        }
+    }
+
+    useEffect(() => {
+        fetchCheckins()
+        fetchClientDetails()
+    }, [client.id])
+
+
     // Helper to get series data for selected metric
     const getMetricData = (key: string) => {
         return checkins.map(c => {
@@ -61,16 +91,28 @@ export function CheckinTab({ client }: { client: any }) {
         }).filter(d => d.value !== null)
     }
 
+    const handleSaveTarget = async (value: number) => {
+        const { updateClientTargetAction } = await import('@/app/(dashboard)/clients/[id]/target-actions')
+        const result = await updateClientTargetAction(client.id, selectedMetric, value)
+
+        if (result.success) {
+            // Optimistic update or refetch
+            setLocalTargets(prev => ({
+                ...prev,
+                [selectedMetric]: value
+            }))
+            fetchClientDetails() // Ensure sync
+        }
+    }
+
     const metricData = getMetricData(selectedMetric)
     const metricConfig = METRICS_CONFIG[selectedMetric] || { label: 'Medida', unit: '' }
 
     const startVal = metricData.length > 0 ? metricData[0].value : null
     const currentVal = metricData.length > 0 ? metricData[metricData.length - 1].value : null
 
-    // Target logic: simple default handling for weight/fat, others null for now
-    let targetVal = null
-    if (selectedMetric === 'weight') targetVal = client.target_weight
-    if (selectedMetric === 'body_fat') targetVal = client.target_fat
+    // Target logic: unified lookup
+    const targetVal = localTargets[selectedMetric] || null
 
     return (
         <div className="max-w-[1400px] mx-auto space-y-6">
@@ -96,6 +138,7 @@ export function CheckinTab({ client }: { client: any }) {
                         target={targetVal}
                         label={metricConfig.label}
                         unit={metricConfig.unit}
+                        onEditTarget={() => setIsEditTargetOpen(true)}
                     />
 
                     <WeightChart
@@ -110,6 +153,15 @@ export function CheckinTab({ client }: { client: any }) {
                     />
                 </div>
             </div>
+
+            <EditTargetDialog
+                open={isEditTargetOpen}
+                onOpenChange={setIsEditTargetOpen}
+                metricLabel={metricConfig.label}
+                metricUnit={metricConfig.unit}
+                initialValue={targetVal}
+                onSave={handleSaveTarget}
+            />
         </div>
     )
 }
