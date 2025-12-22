@@ -21,6 +21,8 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 // We define a type for the client data we expect
 interface Client {
@@ -55,7 +57,7 @@ export function ClientTable({ clients }: ClientTableProps) {
         const nextCheckin = new Date(lastCheckin)
         nextCheckin.setDate(nextCheckin.getDate() + 7)
 
-        return nextCheckin.toLocaleDateString()
+        return format(nextCheckin, 'dd/MM/yyyy', { locale: es })
     }
 
     return (
