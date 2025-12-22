@@ -1,13 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Ruler, Scale } from "lucide-react"
+import { Plus, Ruler, Scale, Camera, X } from "lucide-react"
 import { createCheckinAction } from "@/app/(dashboard)/clients/[id]/checkin-actions"
+import { createClient } from "@/lib/supabase/client"
+import Image from "next/image"
 
 interface AddCheckinDialogProps {
     clientId: string
@@ -17,12 +19,15 @@ export function AddCheckinDialog({ clientId }: AddCheckinDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Basic
     const [weight, setWeight] = useState("")
     const [bodyFat, setBodyFat] = useState("")
     const [leanMass, setLeanMass] = useState("")
     const [observations, setObservations] = useState("")
+    const [photoFile, setPhotoFile] = useState<File | null>(null)
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
     // Measurements
     const [chest, setChest] = useState("")
@@ -32,11 +37,65 @@ export function AddCheckinDialog({ clientId }: AddCheckinDialogProps) {
     const [thigh, setThigh] = useState("")
     const [calves, setCalves] = useState("")
 
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0]
+            setPhotoFile(file)
+
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
+    const handleRemovePhoto = () => {
+        setPhotoFile(null)
+        setPhotoPreview(null)
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ""
+        }
+    }
+
     const handleSave = async () => {
         setLoading(true)
 
         // Parse numeric values safely
         const parseNum = (val: string) => val ? parseFloat(val) : undefined
+
+        let uploadedPhotoUrls: string[] = []
+
+        if (photoFile) {
+            try {
+                const supabase = createClient()
+                const fileExt = photoFile.name.split('.').pop()
+                const fileName = `${clientId}/${Date.now()}.${fileExt}`
+
+                const { error: uploadError, data } = await supabase.storage
+                    .from('progress-photos')
+                    .upload(fileName, photoFile)
+
+                if (uploadError) {
+                    console.error('Upload error:', uploadError)
+                    alert('Error al subir la imagen')
+                    setLoading(false)
+                    return
+                }
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('progress-photos')
+                    .getPublicUrl(fileName)
+
+                uploadedPhotoUrls.push(publicUrl)
+
+            } catch (error) {
+                console.error('Error handling photo:', error)
+                alert('Error al procesar la imagen')
+                setLoading(false)
+                return
+            }
+        }
 
         const result = await createCheckinAction({
             clientId,
@@ -53,7 +112,7 @@ export function AddCheckinDialog({ clientId }: AddCheckinDialogProps) {
                 thigh: parseNum(thigh),
                 calves: parseNum(calves)
             },
-            photos: [] // Placeholder for now
+            photos: uploadedPhotoUrls
         })
 
         if (result.error) {
@@ -70,6 +129,7 @@ export function AddCheckinDialog({ clientId }: AddCheckinDialogProps) {
             setArm("")
             setThigh("")
             setCalves("")
+            handleRemovePhoto()
         }
         setLoading(false)
     }
@@ -92,6 +152,49 @@ export function AddCheckinDialog({ clientId }: AddCheckinDialogProps) {
                             <Label htmlFor="date">Fecha</Label>
                             <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
                         </div>
+                    </div>
+
+                    {/* Photo Upload Section */}
+                    <div className="space-y-2">
+                        <Label>Foto de estado actual (Opcional)</Label>
+                        <div className="flex items-center gap-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full sm:w-auto"
+                            >
+                                <Camera className="mr-2 h-4 w-4" />
+                                {photoFile ? "Cambiar foto" : "Subir foto"}
+                            </Button>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleFileSelect}
+                            />
+                        </div>
+
+                        {photoPreview && (
+                            <div className="relative mt-4 w-full sm:w-[200px] h-[200px] rounded-md overflow-hidden border">
+                                <Image
+                                    src={photoPreview}
+                                    alt="Previsualización"
+                                    fill
+                                    className="object-cover"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                                    onClick={handleRemovePhoto}
+                                >
+                                    <X className="h-3 w-3" />
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-4">
