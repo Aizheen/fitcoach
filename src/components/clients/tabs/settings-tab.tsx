@@ -23,6 +23,7 @@ export function SettingsTab({ client }: { client: any }) {
         birth_date: client.birth_date || '',
         height: client.height || '',
         initial_weight: client.initial_weight || '',
+        initial_body_fat: client.initial_body_fat || '',
         status: client.status || 'active',
         goal_text: client.goal_text || '',
         goal_specific: client.goal_specific || '',
@@ -49,6 +50,7 @@ export function SettingsTab({ client }: { client: any }) {
             ...formData,
             height: formData.height ? parseFloat(formData.height) : null,
             initial_weight: formData.initial_weight ? parseFloat(formData.initial_weight) : null,
+            initial_body_fat: formData.initial_body_fat ? parseFloat(formData.initial_body_fat) : null,
             target_weight: formData.target_weight ? parseFloat(formData.target_weight) : null,
             target_fat: formData.target_fat ? parseFloat(formData.target_fat) : null,
         }
@@ -182,10 +184,14 @@ export function SettingsTab({ client }: { client: any }) {
                             <CardTitle>Metas Numéricas</CardTitle>
                             <CardDescription>Valores objetivo para el seguimiento.</CardDescription>
                         </CardHeader>
-                        <CardContent className="grid gap-4 md:grid-cols-3">
+                        <CardContent className="grid gap-4 md:grid-cols-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="initial_weight">Peso Inicial (kg)</Label>
                                 <Input id="initial_weight" name="initial_weight" type="number" step="0.1" value={formData.initial_weight} onChange={handleChange} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="initial_body_fat">Grasa Inicial (%)</Label>
+                                <Input id="initial_body_fat" name="initial_body_fat" type="number" step="0.1" value={formData.initial_body_fat} onChange={handleChange} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="target_weight">Peso Objetivo (kg)</Label>

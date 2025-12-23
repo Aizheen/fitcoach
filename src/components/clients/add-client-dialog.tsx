@@ -100,10 +100,14 @@ export function AddClientDialog() {
                     </div>
 
                     {/* Datos corporales iniciales */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="initial_weight">Peso inicial (kg) *</Label>
                             <Input id="initial_weight" name="initial_weight" type="number" step="0.1" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="initial_body_fat">Grasa corporal inicial (%)</Label>
+                            <Input id="initial_body_fat" name="initial_body_fat" type="number" step="0.1" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="height">Altura (cm) *</Label>

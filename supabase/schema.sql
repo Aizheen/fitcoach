@@ -33,6 +33,7 @@ create table public.clients (
   
   -- Initial Data
   initial_weight numeric,
+  initial_body_fat numeric,
   height numeric,
   birth_date date,
   

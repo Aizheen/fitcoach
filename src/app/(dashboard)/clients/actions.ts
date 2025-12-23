@@ -19,6 +19,7 @@ export async function createClientAction(formData: FormData) {
     const phone = formData.get('phone') as string
     const birth_date = formData.get('birth_date') as string
     const initial_weight = formData.get('initial_weight')
+    const initial_body_fat = formData.get('initial_body_fat')
     const height = formData.get('height')
     const goal_text = formData.get('goal_text') as string
     const goal_specific = formData.get('goal_specific') as string
@@ -34,6 +35,7 @@ export async function createClientAction(formData: FormData) {
         phone: phone || null,
         birth_date: birth_date || null,
         initial_weight: initial_weight ? parseFloat(initial_weight.toString()) : null,
+        initial_body_fat: initial_body_fat ? parseFloat(initial_body_fat.toString()) : null,
         height: height ? parseFloat(height.toString()) : null,
         goal_text: goal_text || null,
         goal_specific: goal_specific || null,
