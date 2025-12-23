@@ -21,6 +21,7 @@ export function SettingsTab({ client }: { client: any }) {
         email: client.email || '',
         phone: client.phone || '',
         birth_date: client.birth_date || '',
+        gender: client.gender || '',
         height: client.height || '',
         initial_weight: client.initial_weight || '',
         initial_body_fat: client.initial_body_fat || '',
@@ -112,6 +113,18 @@ export function SettingsTab({ client }: { client: any }) {
                             <div className="grid gap-2">
                                 <Label htmlFor="birth_date">Fecha de Nacimiento</Label>
                                 <Input id="birth_date" name="birth_date" type="date" value={formData.birth_date} onChange={handleChange} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="gender">Sexo</Label>
+                                <Select value={formData.gender} onValueChange={(val) => handleSelectChange('gender', val)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Seleccionar" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="male">Masculino</SelectItem>
+                                        <SelectItem value="female">Femenino</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="height">Altura (cm)</Label>

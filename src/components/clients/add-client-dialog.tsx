@@ -99,6 +99,19 @@ export function AddClientDialog() {
                         </div>
                     </div>
 
+                    <div className="space-y-2">
+                        <Label htmlFor="gender">Sexo</Label>
+                        <Select name="gender">
+                            <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="male">Masculino</SelectItem>
+                                <SelectItem value="female">Femenino</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     {/* Datos corporales iniciales */}
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">

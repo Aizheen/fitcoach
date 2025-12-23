@@ -36,6 +36,7 @@ create table public.clients (
   initial_body_fat numeric,
   height numeric,
   birth_date date,
+  gender text check (gender in ('male', 'female')),
   
   -- Goals
   goal_text text,
