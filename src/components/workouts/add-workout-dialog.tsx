@@ -16,7 +16,6 @@ export function AddWorkoutDialog() {
     const [loading, setLoading] = useState(false)
 
     const [name, setName] = useState('')
-    const [description, setDescription] = useState('')
     const [exercises, setExercises] = useState<any[]>([])
 
     const router = useRouter()
@@ -39,7 +38,7 @@ export function AddWorkoutDialog() {
 
         const result = await createWorkoutAction({
             name,
-            description,
+            description: '', // No description
             exercises
         })
 
@@ -55,7 +54,6 @@ export function AddWorkoutDialog() {
 
     const resetForm = () => {
         setName('')
-        setDescription('')
         setExercises([])
     }
 
@@ -81,16 +79,6 @@ export function AddWorkoutDialog() {
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Ej: Pierna Hipertrofia A"
                                 required
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Descripción (opcional)</Label>
-                            <Input
-                                id="description"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Notas sobre la rutina..."
                             />
                         </div>
                     </div>

@@ -7,7 +7,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Download, MessageCircle, Share2 } from "lucide-react"
+import { Download, MessageCircle } from "lucide-react"
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -15,16 +15,18 @@ interface WorkoutDetailDialogProps {
     isOpen: boolean
     onClose: () => void
     workout: any
-    client: any
+    client?: any
 }
 
 export function WorkoutDetailDialog({ isOpen, onClose, workout, client }: WorkoutDetailDialogProps) {
     if (!workout) return null
 
     const exercises = Array.isArray(workout.structure) ? workout.structure : []
-    const scheduledDays = workout.scheduled_days && workout.scheduled_days.length > 0
+
+    // Only show scheduled days if client context exists and they are scheduled
+    const scheduledDays = client && workout.scheduled_days && workout.scheduled_days.length > 0
         ? workout.scheduled_days.join(" | ")
-        : "Sin dias asignados"
+        : null
 
     const handleDownloadPDF = () => {
         const doc = new jsPDF()
@@ -34,8 +36,10 @@ export function WorkoutDetailDialog({ isOpen, onClose, workout, client }: Workou
         doc.text(`Rutina: ${workout.name}`, 14, 20)
 
         doc.setFontSize(12)
-        doc.text(`Cliente: ${client.full_name || 'N/A'}`, 14, 30)
-        doc.text(`Días: ${scheduledDays}`, 14, 36)
+        if (client) {
+            doc.text(`Cliente: ${client.full_name || 'N/A'}`, 14, 30)
+            if (scheduledDays) doc.text(`Días: ${scheduledDays}`, 14, 36)
+        }
 
         // Prepare table data
         const tableBody: any[] = []
@@ -67,7 +71,7 @@ export function WorkoutDetailDialog({ isOpen, onClose, workout, client }: Workou
         })
 
         autoTable(doc, {
-            startY: 45,
+            startY: client ? 45 : 35, // Adjust start if client info is missing
             head: [['Detalle', 'Repes', 'Peso', 'Descanso', 'Notas']],
             body: tableBody,
             theme: 'grid',
@@ -85,7 +89,7 @@ export function WorkoutDetailDialog({ isOpen, onClose, workout, client }: Workou
     }
 
     const handleShareWhatsApp = () => {
-        if (!client.phone) {
+        if (!client || !client.phone) {
             alert("El cliente no tiene un número de teléfono registrado.")
             return
         }
@@ -98,10 +102,6 @@ Ya tenés lista la nueva rutina "${workout.name}".
 Si algo no te cierra o tenés dudas, avisame!.`
 
         const encoded = encodeURIComponent(message)
-        // Check if phone has country code. If not, maybe warn? Or assume local?
-        // Usually Supabase inputs might be raw. We'll try passing cleanPhone.
-        // Ideally should have country code.
-
         window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, '_blank')
     }
 
@@ -116,8 +116,9 @@ Si algo no te cierra o tenés dudas, avisame!.`
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold">{workout.name}</h2>
                         <div className="flex items-center text-sm text-muted-foreground gap-4">
-                            <span className="font-medium text-foreground">{scheduledDays}</span>
-                            {/* Duration removed as requested */}
+                            {scheduledDays && (
+                                <span className="font-medium text-foreground">{scheduledDays}</span>
+                            )}
                         </div>
                     </div>
 
@@ -180,14 +181,15 @@ Si algo no te cierra o tenés dudas, avisame!.`
                             <Download className="mr-2 h-4 w-4" />
                             Descargar PDF
                         </Button>
-                        <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleShareWhatsApp}>
-                            <MessageCircle className="mr-2 h-4 w-4" />
-                            Compartir por WhatsApp
-                        </Button>
+                        {client && (
+                            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleShareWhatsApp}>
+                                <MessageCircle className="mr-2 h-4 w-4" />
+                                Compartir por WhatsApp
+                            </Button>
+                        )}
                     </div>
                 </div>
             </DialogContent>
         </Dialog>
     )
 }
-
