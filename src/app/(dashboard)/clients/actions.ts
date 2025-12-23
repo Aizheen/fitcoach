@@ -52,3 +52,35 @@ export async function createClientAction(formData: FormData) {
     revalidatePath('/clients')
     return { success: true }
 }
+
+export async function updateClientAction(clientId: string, data: any) {
+    const supabase = await createClient()
+
+    // Security check: Handled by RLS (assuming "Trainers can manage own clients")
+    // data should be sanitized/validated ideally.
+
+    const { error } = await supabase.from('clients').update(data).eq('id', clientId)
+
+    if (error) {
+        console.error("Error updating client:", error)
+        return { error: "Error al actualizar la información" }
+    }
+
+    revalidatePath(`/clients/${clientId}`)
+    revalidatePath('/clients')
+    return { success: true }
+}
+
+export async function deleteClientAction(clientId: string) {
+    const supabase = await createClient()
+
+    const { error } = await supabase.from('clients').delete().eq('id', clientId)
+
+    if (error) {
+        console.error("Error deleting client:", error)
+        return { error: "Error al eliminar el cliente" }
+    }
+
+    revalidatePath('/clients')
+    return { success: true }
+}
