@@ -6,15 +6,19 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { Clock } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Download, MessageCircle, Share2 } from "lucide-react"
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 interface WorkoutDetailDialogProps {
     isOpen: boolean
     onClose: () => void
     workout: any
+    client: any
 }
 
-export function WorkoutDetailDialog({ isOpen, onClose, workout }: WorkoutDetailDialogProps) {
+export function WorkoutDetailDialog({ isOpen, onClose, workout, client }: WorkoutDetailDialogProps) {
     if (!workout) return null
 
     const exercises = Array.isArray(workout.structure) ? workout.structure : []
@@ -22,7 +26,84 @@ export function WorkoutDetailDialog({ isOpen, onClose, workout }: WorkoutDetailD
         ? workout.scheduled_days.join(" | ")
         : "Sin dias asignados"
 
-    const totalDuration = "60 min" // Estimated
+    const handleDownloadPDF = () => {
+        const doc = new jsPDF()
+
+        // Header
+        doc.setFontSize(18)
+        doc.text(`Rutina: ${workout.name}`, 14, 20)
+
+        doc.setFontSize(12)
+        doc.text(`Cliente: ${client.full_name || 'N/A'}`, 14, 30)
+        doc.text(`Días: ${scheduledDays}`, 14, 36)
+
+        // Prepare table data
+        const tableBody: any[] = []
+
+        exercises.forEach((ex: any) => {
+            // Title row for exercise
+            tableBody.push([{ content: ex.name, colSpan: 5, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }])
+
+            const setsDetail = ex.sets_detail || []
+            if (setsDetail.length > 0) {
+                setsDetail.forEach((set: any, idx: number) => {
+                    tableBody.push([
+                        `Set ${idx + 1}`,
+                        `${set.reps}`,
+                        `${set.weight}kg`,
+                        `${set.rest}s`,
+                        ''
+                    ])
+                })
+            } else {
+                tableBody.push([
+                    'Series Generales',
+                    `${ex.reps}`,
+                    '-',
+                    '-',
+                    `${ex.sets} series`
+                ])
+            }
+        })
+
+        autoTable(doc, {
+            startY: 45,
+            head: [['Detalle', 'Repes', 'Peso', 'Descanso', 'Notas']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [234, 88, 12] } // Orange-600 roughly
+        })
+
+        if (workout.description) {
+            const finalY = (doc as any).lastAutoTable.finalY || 45
+            doc.text("Notas generales:", 14, finalY + 10)
+            doc.setFontSize(10)
+            doc.text(workout.description, 14, finalY + 16, { maxWidth: 180 })
+        }
+
+        doc.save(`Rutina_${workout.name.replace(/\s+/g, '_')}.pdf`)
+    }
+
+    const handleShareWhatsApp = () => {
+        if (!client.phone) {
+            alert("El cliente no tiene un número de teléfono registrado.")
+            return
+        }
+
+        // Clean phone number (remove spaces, dashes, parentheses)
+        const cleanPhone = client.phone.replace(/[^0-9]/g, '')
+
+        const message = `Hola ${client.full_name || ''}
+Ya tenés lista la nueva rutina "${workout.name}".
+Si algo no te cierra o tenés dudas, avisame!.`
+
+        const encoded = encodeURIComponent(message)
+        // Check if phone has country code. If not, maybe warn? Or assume local?
+        // Usually Supabase inputs might be raw. We'll try passing cleanPhone.
+        // Ideally should have country code.
+
+        window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, '_blank')
+    }
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -36,9 +117,7 @@ export function WorkoutDetailDialog({ isOpen, onClose, workout }: WorkoutDetailD
                         <h2 className="text-lg font-semibold">{workout.name}</h2>
                         <div className="flex items-center text-sm text-muted-foreground gap-4">
                             <span className="font-medium text-foreground">{scheduledDays}</span>
-                            <span className="flex items-center gap-1">
-                                <Clock className="h-4 w-4" /> {totalDuration}
-                            </span>
+                            {/* Duration removed as requested */}
                         </div>
                     </div>
 
@@ -94,8 +173,21 @@ export function WorkoutDetailDialog({ isOpen, onClose, workout }: WorkoutDetailD
                             }
                         </p>
                     </div>
+
+                    {/* Actions Footer */}
+                    <div className="flex justify-end gap-3 pt-4 border-t sticky bottom-0 bg-background">
+                        <Button variant="outline" onClick={handleDownloadPDF}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Descargar PDF
+                        </Button>
+                        <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleShareWhatsApp}>
+                            <MessageCircle className="mr-2 h-4 w-4" />
+                            Compartir por WhatsApp
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
     )
 }
+

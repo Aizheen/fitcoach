@@ -47,7 +47,7 @@ export default async function ClientNotesPage({ params }: { params: { id: string
                     <CheckinTab client={client} />
                 </TabsContent>
                 <TabsContent value="training">
-                    <TrainingTab clientId={client.id} />
+                    <TrainingTab client={client} />
                 </TabsContent>
                 <TabsContent value="diet">
                     <DietTab client={client} />

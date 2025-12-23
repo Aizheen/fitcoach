@@ -12,10 +12,10 @@ import { cn } from '@/lib/utils'
 import { WorkoutDetailDialog } from '../workout-detail-dialog'
 
 interface TrainingTabProps {
-    clientId: string
+    client: any
 }
 
-export function TrainingTab({ clientId }: TrainingTabProps) {
+export function TrainingTab({ client }: TrainingTabProps) {
     const [workouts, setWorkouts] = useState<any[]>([])
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
     const [editingWorkout, setEditingWorkout] = useState<any>(null)
@@ -23,14 +23,14 @@ export function TrainingTab({ clientId }: TrainingTabProps) {
 
     useEffect(() => {
         fetchAssignedWorkouts()
-    }, [clientId])
+    }, [client.id])
 
     const fetchAssignedWorkouts = async () => {
         const supabase = createClient()
         const { data } = await supabase
             .from('assigned_workouts')
             .select('*')
-            .eq('client_id', clientId)
+            .eq('client_id', client.id)
             .order('created_at', { ascending: false })
 
         if (data) setWorkouts(data)
@@ -38,7 +38,7 @@ export function TrainingTab({ clientId }: TrainingTabProps) {
 
     const handleDelete = async (id: string) => {
         if (confirm('¿Estás seguro de eliminar esta rutina asignada?')) {
-            await deleteAssignedWorkoutAction(id, clientId)
+            await deleteAssignedWorkoutAction(id, client.id)
             fetchAssignedWorkouts()
         }
     }
@@ -49,7 +49,7 @@ export function TrainingTab({ clientId }: TrainingTabProps) {
 
         await updateAssignedWorkoutAction({
             id: workoutId,
-            clientId: clientId,
+            clientId: client.id,
             name: workout.name,
             exercises: updatedStructure,
             validUntil: workout.valid_until,
@@ -74,13 +74,13 @@ export function TrainingTab({ clientId }: TrainingTabProps) {
                     </Button>
 
                     <AssignWorkoutDialog
-                        clientId={clientId}
+                        clientId={client.id}
                         onOpenChange={(open) => {
                             if (!open) fetchAssignedWorkouts()
                         }}
                     />
 
-                    <Button variant="outline">
+                    <Button variant="outline" className="hidden sm:flex">
                         <Download className="mr-2 h-4 w-4" /> Descargar Rutina
                     </Button>
                 </div>
@@ -114,7 +114,7 @@ export function TrainingTab({ clientId }: TrainingTabProps) {
 
             {editingWorkout && (
                 <AssignWorkoutDialog
-                    clientId={clientId}
+                    clientId={client.id}
                     existingWorkout={editingWorkout}
                     open={true}
                     onOpenChange={(open) => {
@@ -132,8 +132,10 @@ export function TrainingTab({ clientId }: TrainingTabProps) {
                     isOpen={true}
                     onClose={() => setViewingWorkout(null)}
                     workout={viewingWorkout}
+                    client={client}
                 />
             )}
         </div>
     )
+
 }
