@@ -2,36 +2,77 @@
 import { StatsCard } from '@/components/dashboard/stats-cards'
 import { Activity, Users, FileText, Utensils, AlertCircle, Dumbbell, CreditCard } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { createClient } from '@/lib/supabase/server'
+import { formatDistanceToNow } from 'date-fns'
+import { es } from 'date-fns/locale'
 
-export default function DashboardPage() {
-    // Placeholder data - In real app, fetch from Supabase
+export default async function DashboardPage() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) return null
+
+    // 1. Active Clients
+    const { count: activeClientsCount } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('trainer_id', user.id)
+        .eq('status', 'active')
+
+    // 2. Assigned Workouts
+    const { count: activeWorkoutsCount } = await supabase
+        .from('assigned_workouts')
+        .select('*', { count: 'exact', head: true })
+        .eq('trainer_id', user.id)
+
+    // 3. Assigned Diets
+    const { count: activeDietsCount } = await supabase
+        .from('assigned_diets')
+        .select('*', { count: 'exact', head: true })
+        .eq('trainer_id', user.id)
+
+    // 4. Pending Payments
+    const { count: pendingPaymentsCount } = await supabase
+        .from('payments')
+        .select('*', { count: 'exact', head: true })
+        .eq('trainer_id', user.id)
+        .eq('status', 'pending')
+
     const stats = [
         {
             title: "Asesorados activos",
-            value: "12",
-            description: "+2 este mes",
+            value: activeClientsCount?.toString() || "0",
+            description: "En seguimiento",
             icon: Users,
         },
         {
-            title: "Rutinas activas",
-            value: "24",
-            description: "Asignadas a 10 clientes",
+            title: "Rutinas asignadas",
+            value: activeWorkoutsCount?.toString() || "0",
+            description: "Total asignadas",
             icon: Dumbbell,
         },
         {
-            title: "Dietas activas",
-            value: "8",
-            description: "Asignadas a 8 clientes",
+            title: "Dietas asignadas",
+            value: activeDietsCount?.toString() || "0",
+            description: "Planes nutricionales",
             icon: Utensils,
         },
         {
             title: "Pagos pendientes",
-            value: "3",
-            description: "Vencen pronto",
+            value: pendingPaymentsCount?.toString() || "0",
+            description: "Por cobrar",
             icon: AlertCircle,
-            alert: true,
+            alert: (pendingPaymentsCount || 0) > 0,
         },
     ]
+
+    // Fetch Recent Activity (Latest Checkins)
+    const { data: recentCheckins } = await supabase
+        .from('checkins')
+        .select('id, date, weight, clients(full_name)')
+        .eq('trainer_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
 
     return (
         <div className="space-y-8">
@@ -54,32 +95,32 @@ export default function DashboardPage() {
                     <CardHeader>
                         <CardTitle>Actividad Reciente</CardTitle>
                         <CardDescription>
-                            Últimos movimientos de tus asesorados.
+                            Últimos check-ins recibidos.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {/* Stub items */}
-                            <div className="flex items-center">
-                                <div className="ml-4 space-y-1">
-                                    <p className="text-sm font-medium leading-none">Juan Perez actualizó su peso</p>
-                                    <p className="text-sm text-muted-foreground">Hace 2 horas</p>
-                                </div>
-                                <div className="ml-auto font-medium text-green-600">-0.5 kg</div>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="ml-4 space-y-1">
-                                    <p className="text-sm font-medium leading-none">Maria Garcia realizó check-in</p>
-                                    <p className="text-sm text-muted-foreground">Hace 5 horas</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="ml-4 space-y-1">
-                                    <p className="text-sm font-medium leading-none">Pago recibido de Carlos Lopez</p>
-                                    <p className="text-sm text-muted-foreground">Ayer</p>
-                                </div>
-                                <div className="ml-auto font-medium">+$50</div>
-                            </div>
+                            {recentCheckins && recentCheckins.length > 0 ? (
+                                recentCheckins.map((checkin: any) => (
+                                    <div key={checkin.id} className="flex items-center">
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium leading-none">
+                                                {checkin.clients?.full_name || 'Cliente'} actualizó su estado
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {formatDistanceToNow(new Date(checkin.date || Date.now()), { addSuffix: true, locale: es })}
+                                            </p>
+                                        </div>
+                                        {checkin.weight && (
+                                            <div className="ml-auto font-medium text-sm">
+                                                {checkin.weight} kg
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted-foreground">No hay actividad reciente.</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -87,26 +128,16 @@ export default function DashboardPage() {
                 {/* Alerts / Tasks */}
                 <Card className="col-span-3">
                     <CardHeader>
-                        <CardTitle>Alertas</CardTitle>
+                        <CardTitle>Accesos Rápidos</CardTitle>
                         <CardDescription>
-                            Acciones requeridas.
+                            Acciones frecuentes.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <div className="flex items-start gap-4 p-3 border rounded-md bg-destructive/5 border-destructive/20">
-                                <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium text-destructive">Check-in vencido</p>
-                                    <p className="text-xs text-muted-foreground">Pedro Rodriguez debe su check-in hace 2 días.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-4 p-3 border rounded-md">
-                                <CreditCard className="h-5 w-5 text-muted-foreground mt-0.5" />
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium">Pago pendiente</p>
-                                    <p className="text-xs text-muted-foreground">Laura Martinez vence mañana.</p>
-                                </div>
+                            {/* Placeholder for shortcuts since alerts logic is complex to infer just from counts */}
+                            <div className="p-4 border rounded-md bg-muted/20 text-sm text-muted-foreground text-center">
+                                Próximamente: Alertas de vencimiento de planes.
                             </div>
                         </div>
                     </CardContent>
