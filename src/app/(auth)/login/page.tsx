@@ -1,4 +1,4 @@
-
+import Image from 'next/image'
 import { LoginForm } from '@/components/auth/login-form'
 
 export default function LoginPage() {
@@ -7,11 +7,8 @@ export default function LoginPage() {
             {/* Columna Izquierda (Formulario) */}
             <div className="flex flex-col items-center justify-center p-8 bg-background">
                 <div className="w-full max-w-sm mb-10">
-                    <div className="flex items-center gap-2 mb-8">
-                        {/* Logo placeholder - using text or a simple SVG if I had one. 
-                Using text "FITCOACH" as per requirement "Logo + nombre de la app" */}
-                        <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">F</div>
-                        <span className="font-bold text-xl tracking-tight text-foreground">FITCOACH</span>
+                    <div className="flex items-center justify-center mb-8">
+                        <Image src="/orbit_logo.png" alt="Orbit" width={180} height={60} className="h-12 w-auto object-contain" priority />
                     </div>
                     <LoginForm />
                 </div>

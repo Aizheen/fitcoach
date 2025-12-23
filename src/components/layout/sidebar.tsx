@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
@@ -52,13 +53,12 @@ export function Sidebar() {
                 collapsed ? "justify-center" : "justify-between"
             )}>
                 {!collapsed && (
-                    <div className="flex items-center">
-                        <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white font-bold mr-2">F</div>
-                        <span className="font-bold text-xl tracking-tight text-foreground">FITCOACH</span>
+                    <div className="flex items-center justify-start px-2">
+                        <Image src="/orbit_logo.png" alt="Orbit" width={120} height={40} className="h-8 w-auto object-contain" priority />
                     </div>
                 )}
                 {collapsed && (
-                    <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">F</div>
+                    <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">O</div>
                 )}
 
                 {/* This toggle could be moved to top right of sidebar or outside */}
