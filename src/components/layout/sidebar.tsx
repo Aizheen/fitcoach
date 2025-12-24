@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
     Users,
-    LayoutDashboard,
+    Home,
     Utensils,
     Dumbbell,
     CreditCard,
@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation'
 import { useSidebar } from './sidebar-context'
 
 const navigation = [
-    { name: 'Inicio', href: '/', icon: LayoutDashboard },
+    { name: 'Inicio', href: '/', icon: Home },
     { name: 'Mis asesorados', href: '/clients', icon: Users },
     { name: 'Recetas', href: '/recipes', icon: Utensils },
     { name: 'Planes de entrenamiento', href: '/workouts', icon: Dumbbell },

@@ -12,6 +12,24 @@ export default async function DashboardPage() {
 
     if (!user) return null
 
+    // Get user profile for name
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single()
+
+    // Function to get greeting based on time of day
+    const getGreeting = () => {
+        const hour = new Date().getHours()
+        if (hour >= 6 && hour < 12) return 'Buenos días'
+        if (hour >= 12 && hour < 20) return 'Buenas tardes'
+        return 'Buenas noches'
+    }
+
+    const greeting = getGreeting()
+    const userName = profile?.full_name || 'Entrenador'
+
     // 1. Active Clients
     const { count: activeClientsCount } = await supabase
         .from('clients')
@@ -48,7 +66,7 @@ export default async function DashboardPage() {
         {
             title: "Rutinas asignadas",
             value: activeWorkoutsCount?.toString() || "0",
-            description: "Total asignadas",
+            description: "Planes activos",
             icon: Dumbbell,
         },
         {
@@ -61,8 +79,7 @@ export default async function DashboardPage() {
             title: "Pagos pendientes",
             value: pendingPaymentsCount?.toString() || "0",
             description: "Por cobrar",
-            icon: AlertCircle,
-            alert: (pendingPaymentsCount || 0) > 0,
+            icon: CreditCard,
         },
     ]
 
@@ -77,7 +94,7 @@ export default async function DashboardPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">Hola, Entrenador</h2>
+                <h2 className="text-3xl font-bold tracking-tight">{greeting}, {userName}</h2>
                 <p className="text-muted-foreground">
                     Aquí tenés un resumen de tu actividad hoy.
                 </p>
