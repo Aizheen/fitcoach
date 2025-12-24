@@ -92,7 +92,13 @@ export function RecipeEditor({ recipe }: RecipeEditorProps) {
     const [imageUrl, setImageUrl] = useState(recipe.image_url || '')
 
     // Ingredients state
-    const initialIngredients = recipe.ingredients || recipe.ingredients_data || []
+    const initialIngredients = Array.isArray(recipe.ingredients)
+        ? recipe.ingredients
+        : (Array.isArray(recipe.ingredients_data) ? recipe.ingredients_data : [])
+
+    console.log('Recipe ingredients:', recipe.ingredients)
+    console.log('Initial ingredients:', initialIngredients)
+
     const [recipeIngredients, setRecipeIngredients] = useState<RecipeIngredient[]>(initialIngredients)
 
     // Available ingredients from DB
