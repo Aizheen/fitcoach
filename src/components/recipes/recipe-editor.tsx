@@ -476,13 +476,45 @@ export function RecipeEditor({ recipe }: RecipeEditorProps) {
 
                                     {recipeIngredients.map((ing, index) => {
                                         const factor = (ing.grams || 0) / 100
-                                        const ingMacros = {
+                                        const hasNutritionalData = (ing.kcal_100g || 0) > 0
+                                        const ingMacros = hasNutritionalData ? {
                                             kcal: (ing.kcal_100g || 0) * factor,
                                             protein: (ing.protein_100g || 0) * factor,
                                             carbs: (ing.carbs_100g || 0) * factor,
                                             fat: (ing.fat_100g || 0) * factor,
+                                        } : null
+
+                                        // Ingredient from CSV (no ingredient_code, readonly)
+                                        if (!ing.ingredient_code) {
+                                            return (
+                                                <div
+                                                    key={index}
+                                                    className="grid grid-cols-12 gap-2 items-center p-2 rounded-lg border bg-muted/30"
+                                                >
+                                                    <div className="col-span-5 text-sm">
+                                                        {ing.ingredient_name || 'Ingrediente sin nombre'}
+                                                    </div>
+                                                    <div className="col-span-2 text-sm text-muted-foreground">
+                                                        {ing.grams}g
+                                                    </div>
+                                                    <div className="col-span-4 text-right text-xs text-muted-foreground italic">
+                                                        Importado del CSV
+                                                    </div>
+                                                    <div className="col-span-1 flex justify-end">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-destructive hover:text-destructive"
+                                                            onClick={() => handleRemoveIngredient(index)}
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )
                                         }
 
+                                        // Editable ingredient from database
                                         return (
                                             <div
                                                 key={index}
@@ -517,10 +549,16 @@ export function RecipeEditor({ recipe }: RecipeEditorProps) {
                                                     />
                                                 </div>
                                                 <div className="col-span-4 text-right text-xs text-muted-foreground">
-                                                    <span className="font-medium text-foreground">{Math.round(ingMacros.kcal)}</span> kcal |{' '}
-                                                    P: {Math.round(ingMacros.protein)}g |{' '}
-                                                    C: {Math.round(ingMacros.carbs)}g |{' '}
-                                                    G: {Math.round(ingMacros.fat)}g
+                                                    {ingMacros ? (
+                                                        <>
+                                                            <span className="font-medium text-foreground">{Math.round(ingMacros.kcal)}</span> kcal |{' '}
+                                                            P: {Math.round(ingMacros.protein)}g |{' '}
+                                                            C: {Math.round(ingMacros.carbs)}g |{' '}
+                                                            G: {Math.round(ingMacros.fat)}g
+                                                        </>
+                                                    ) : (
+                                                        <span className="italic">Sin datos nutricionales</span>
+                                                    )}
                                                 </div>
                                                 <div className="col-span-1 flex justify-end">
                                                     <Button

@@ -30,6 +30,10 @@ interface RecipeCardProps {
         image_url: string | null
         ingredients: RecipeIngredient[] | null
         ingredients_data?: RecipeIngredient[] | null // Legacy field
+        macros_calories?: number | null
+        macros_protein_g?: number | null
+        macros_carbs_g?: number | null
+        macros_fat_g?: number | null
     }
 }
 
@@ -67,6 +71,23 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
 
     // Calculate macros per serving
     const calculateMacrosPerServing = () => {
+        // Check if ingredients have nutritional data
+        const hasNutritionalData = ingredientsList.some(
+            ing => (ing.kcal_100g || 0) > 0
+        )
+
+        // If ingredients don't have nutritional data, use the recipe's stored macros
+        if (!hasNutritionalData && recipe.macros_calories) {
+            const servings = recipe.servings || 1
+            return {
+                kcal: (recipe.macros_calories || 0) / servings,
+                protein: (recipe.macros_protein_g || 0) / servings,
+                carbs: (recipe.macros_carbs_g || 0) / servings,
+                fat: (recipe.macros_fat_g || 0) / servings,
+            }
+        }
+
+        // Otherwise calculate from ingredients
         if (!ingredientsList || ingredientsList.length === 0) {
             return { kcal: 0, protein: 0, carbs: 0, fat: 0 }
         }
