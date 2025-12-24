@@ -505,8 +505,8 @@ export function RecipeEditor({ recipe }: RecipeEditorProps) {
                                                     <div className="col-span-2 text-sm text-muted-foreground">
                                                         {ing.grams}g
                                                     </div>
-                                                    <div className="col-span-4 text-right text-xs text-muted-foreground italic">
-                                                        Importado del CSV
+                                                    <div className="col-span-4 text-right text-xs text-muted-foreground">
+                                                        -
                                                     </div>
                                                     <div className="col-span-1 flex justify-end">
                                                         <Button
