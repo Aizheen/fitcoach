@@ -29,7 +29,7 @@ export async function createClientAction(formData: FormData) {
     const target_weight = formData.get('target_weight')
     const target_fat = formData.get('target_fat')
 
-    const { error } = await supabase.from('clients').insert({
+    const insertData = {
         trainer_id: user.id,
         full_name,
         email: email || null,
@@ -46,11 +46,15 @@ export async function createClientAction(formData: FormData) {
         target_weight: target_weight ? parseFloat(target_weight.toString()) : null,
         target_fat: target_fat ? parseFloat(target_fat.toString()) : null,
         status: 'active'
-    })
+    }
+
+    console.log('Creating client with data:', JSON.stringify(insertData, null, 2))
+
+    const { error } = await supabase.from('clients').insert(insertData)
 
     if (error) {
-        console.error(error)
-        return { error: 'Error al crear el cliente' }
+        console.error('Supabase error creating client:', error)
+        return { error: `Error al crear el cliente: ${error.message}` }
     }
 
     revalidatePath('/clients')

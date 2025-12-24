@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useTransition, useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
     Users,
@@ -14,11 +15,10 @@ import {
     LogOut,
     PanelLeftClose,
     PanelLeftOpen,
-    Menu
+    Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import { useSidebar } from './sidebar-context'
 
 const navigation = [
@@ -34,11 +34,20 @@ export function Sidebar() {
     const pathname = usePathname()
     const router = useRouter()
     const { collapsed, toggleSidebar } = useSidebar()
+    const [isPending, startTransition] = useTransition()
+    const [pendingHref, setPendingHref] = useState<string | null>(null)
 
     const handleSignOut = async () => {
         const supabase = createClient()
         await supabase.auth.signOut()
         router.push('/login')
+    }
+
+    const handleNavigation = (href: string) => {
+        setPendingHref(href)
+        startTransition(() => {
+            router.push(href)
+        })
     }
 
     return (
@@ -78,22 +87,29 @@ export function Sidebar() {
             <div className="flex-1 flex flex-col gap-1 px-3 overflow-y-auto">
                 {navigation.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+                    const isLoading = isPending && pendingHref === item.href
                     return (
-                        <Link
+                        <button
                             key={item.name}
-                            href={item.href}
+                            onClick={() => handleNavigation(item.href)}
                             className={cn(
-                                "flex items-center rounded-lg py-2.5 text-sm font-medium transition-colors",
+                                "flex items-center rounded-lg py-2.5 text-sm font-medium transition-colors w-full text-left",
                                 collapsed ? "justify-center px-2" : "px-3 gap-3",
                                 isActive
                                     ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                                isLoading && "opacity-70"
                             )}
                             title={collapsed ? item.name : undefined}
+                            disabled={isLoading}
                         >
-                            <item.icon className={cn("h-5 w-5", !collapsed && "mr-1")} />
+                            {isLoading ? (
+                                <Loader2 className={cn("h-5 w-5 animate-spin", !collapsed && "mr-1")} />
+                            ) : (
+                                <item.icon className={cn("h-5 w-5", !collapsed && "mr-1")} />
+                            )}
                             {!collapsed && <span>{item.name}</span>}
-                        </Link>
+                        </button>
                     )
                 })}
             </div>

@@ -42,6 +42,7 @@ create table public.clients (
   goal_text text,
   goal_specific text, -- 'lose_fat', 'gain_muscle', 'recomp'
   activity_level text, -- 'sedentary', 'moderate', 'active'
+  work_type text check (work_type in ('home_office', 'physical')),
   
   -- Targets
   target_weight numeric,

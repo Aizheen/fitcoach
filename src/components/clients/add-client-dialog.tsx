@@ -20,18 +20,19 @@ import {
     SelectTrigger,
     SelectValue
 } from '@/components/ui/select'
-import { createClient } from '@/lib/supabase/client'
 import { Plus } from 'lucide-react'
-
-// MVP: We'll put the server action logic here or reuse a general one.
-// Better to use Client Side Supabase for this simple insert or a server action.
-// The Plan said "Preferir Server Actions".
-// I'll create `app/(dashboard)/clients/actions.ts` for this.
+import { createClientAction } from '@/app/(dashboard)/clients/actions'
 
 export function AddClientDialog() {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+
+    // State for Select fields (since Radix Select doesn't support name attribute in forms)
+    const [gender, setGender] = useState('')
+    const [goalSpecific, setGoalSpecific] = useState('')
+    const [activityLevel, setActivityLevel] = useState('')
+    const [workType, setWorkType] = useState('')
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -39,30 +40,41 @@ export function AddClientDialog() {
 
         const formData = new FormData(e.currentTarget)
 
-        // We can call a server action here. 
-        // For now, I'll inline the supabase client call for speed if I haven't made the action yet, 
-        // but I should stick to Server Actions as requested.
-        // I'll assume I have `createClientAction` in `actions.ts`.
-        // Let's create the action file next.
+        // Add select values to FormData since they're not automatically included
+        formData.set('gender', gender)
+        formData.set('goal_specific', goalSpecific)
+        formData.set('activity_level', activityLevel)
+        formData.set('work_type', workType)
 
-        // TEMPORARY: using client-side insert for immediate feedback loop, then refactor to server action if needed strictly.
-        // Actually, "Preferir Server Actions" is a strong hint. I should do it.
-        // I will mock the call here and implement the action in the next step.
-
-        const { createClientAction } = await import('@/app/(dashboard)/clients/actions')
         const result = await createClientAction(formData)
 
         if (result?.error) {
-            alert(result.error) // MVP Error handling
+            alert(result.error)
         } else {
             setOpen(false)
+            // Reset form state
+            setGender('')
+            setGoalSpecific('')
+            setActivityLevel('')
+            setWorkType('')
             router.refresh()
         }
         setLoading(false)
     }
 
+    const handleOpenChange = (newOpen: boolean) => {
+        setOpen(newOpen)
+        if (!newOpen) {
+            // Reset state when closing
+            setGender('')
+            setGoalSpecific('')
+            setActivityLevel('')
+            setWorkType('')
+        }
+    }
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Button className="bg-primary hover:bg-primary/90 text-white">
                     <Plus className="mr-2 h-4 w-4" /> Nuevo asesorado
@@ -101,7 +113,7 @@ export function AddClientDialog() {
 
                     <div className="space-y-2">
                         <Label htmlFor="gender">Sexo</Label>
-                        <Select name="gender">
+                        <Select value={gender} onValueChange={setGender}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Seleccionar" />
                             </SelectTrigger>
@@ -137,7 +149,7 @@ export function AddClientDialog() {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="goal_specific">Objetivo estructurado</Label>
-                            <Select name="goal_specific">
+                            <Select value={goalSpecific} onValueChange={setGoalSpecific}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Seleccionar" />
                                 </SelectTrigger>
@@ -150,7 +162,7 @@ export function AddClientDialog() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="activity_level">Nivel de actividad</Label>
-                            <Select name="activity_level">
+                            <Select value={activityLevel} onValueChange={setActivityLevel}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Seleccionar" />
                                 </SelectTrigger>
@@ -165,7 +177,7 @@ export function AddClientDialog() {
 
                     <div className="space-y-2">
                         <Label htmlFor="work_type">Tipo de trabajo</Label>
-                        <Select name="work_type">
+                        <Select value={workType} onValueChange={setWorkType}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Seleccionar" />
                             </SelectTrigger>
@@ -189,7 +201,7 @@ export function AddClientDialog() {
                     </div>
 
                     <div className="flex justify-end gap-3 mt-4">
-                        <Button variant="outline" type="button" onClick={() => setOpen(false)}>Cancelar</Button>
+                        <Button variant="outline" type="button" onClick={() => handleOpenChange(false)}>Cancelar</Button>
                         <Button type="submit" disabled={loading} className="bg-primary text-white hover:bg-primary/90">
                             {loading ? 'Guardando...' : 'Crear asesorado'}
                         </Button>
