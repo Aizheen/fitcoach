@@ -70,6 +70,10 @@ interface RecipeEditorProps {
         image_url: string | null
         ingredients: RecipeIngredient[] | null
         ingredients_data?: RecipeIngredient[] | null
+        macros_calories?: number | null
+        macros_protein_g?: number | null
+        macros_carbs_g?: number | null
+        macros_fat_g?: number | null
     }
 }
 
@@ -109,6 +113,23 @@ export function RecipeEditor({ recipe }: RecipeEditorProps) {
 
     // Calculate total macros
     const calculateTotalMacros = useCallback(() => {
+        // Check if ingredients have nutritional data
+        const hasNutritionalData = recipeIngredients.some(
+            ing => (ing.kcal_100g || 0) > 0
+        )
+
+        // If ingredients don't have nutritional data, use the recipe's stored macros
+        if (!hasNutritionalData && recipe.macros_calories) {
+            return {
+                kcal: recipe.macros_calories || 0,
+                protein: recipe.macros_protein_g || 0,
+                carbs: recipe.macros_carbs_g || 0,
+                fat: recipe.macros_fat_g || 0,
+                fiber: 0,
+            }
+        }
+
+        // Otherwise calculate from ingredients
         return recipeIngredients.reduce(
             (acc, ing) => {
                 const factor = (ing.grams || 0) / 100
@@ -122,7 +143,7 @@ export function RecipeEditor({ recipe }: RecipeEditorProps) {
             },
             { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
         )
-    }, [recipeIngredients])
+    }, [recipeIngredients, recipe.macros_calories, recipe.macros_protein_g, recipe.macros_carbs_g, recipe.macros_fat_g])
 
     const totalMacros = calculateTotalMacros()
     const macrosPerServing = {
