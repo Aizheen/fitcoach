@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/layout/sidebar'
 import { SidebarProvider } from '@/components/layout/sidebar-context'
+import { Toaster } from '@/components/ui/sonner'
 
 export default function DashboardLayout({
     children,
@@ -14,6 +15,7 @@ export default function DashboardLayout({
                     {children}
                 </main>
             </div>
+            <Toaster />
         </SidebarProvider>
     )
 }
