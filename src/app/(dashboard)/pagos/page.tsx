@@ -204,7 +204,7 @@ export default function PagosPage() {
                             <Loader2 className="absolute -top-0.5 -left-0.5 h-[52px] w-[52px] animate-spin text-primary" />
                         </div>
                         <p className="text-sm text-muted-foreground animate-pulse">
-                            Cargando finanzas...
+                            Cargando tus pagos y planes...
                         </p>
                     </div>
                 </div>
@@ -217,7 +217,7 @@ export default function PagosPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Tus Finanzas</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Tus Pagos y Planes</h1>
                     <p className="text-muted-foreground">
                         Gestiona los pagos y planes de tus asesorados
                     </p>
