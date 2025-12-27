@@ -10,6 +10,7 @@ export async function assignWorkoutAction(data: {
     originTemplateId?: string
     validUntil?: string
     scheduledDays?: string[]
+    notes?: string
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -26,7 +27,8 @@ export async function assignWorkoutAction(data: {
         origin_template_id: data.originTemplateId || null,
         is_customized: true,
         valid_until: data.validUntil || null,
-        scheduled_days: data.scheduledDays || []
+        scheduled_days: data.scheduledDays || [],
+        notes: data.notes || null
     })
 
     if (error) {
@@ -45,6 +47,7 @@ export async function updateAssignedWorkoutAction(data: {
     exercises: any[]
     validUntil?: string
     scheduledDays?: string[]
+    notes?: string
 }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -58,7 +61,8 @@ export async function updateAssignedWorkoutAction(data: {
             name: data.name,
             structure: data.exercises,
             valid_until: data.validUntil || null,
-            scheduled_days: data.scheduledDays || []
+            scheduled_days: data.scheduledDays || [],
+            notes: data.notes || null
         })
         .eq('id', data.id)
         .eq('trainer_id', user.id)

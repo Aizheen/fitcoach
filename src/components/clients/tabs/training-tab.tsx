@@ -10,6 +10,7 @@ import { WorkoutCard } from '../workout-card'
 import { CalendarView } from '../calendar-view'
 import { cn } from '@/lib/utils'
 import { WorkoutDetailDialog } from '../workout-detail-dialog'
+import { generateWorkoutPDF } from '@/lib/pdf-utils'
 
 interface TrainingTabProps {
     client: any
@@ -53,9 +54,27 @@ export function TrainingTab({ client }: TrainingTabProps) {
             name: workout.name,
             exercises: updatedStructure,
             validUntil: workout.valid_until,
-            scheduledDays: workout.scheduled_days
+            scheduledDays: workout.scheduled_days,
+            notes: workout.notes
         })
         fetchAssignedWorkouts()
+    }
+
+    const handleDownloadWorkout = (workout: any) => {
+        generateWorkoutPDF({ workout, client })
+    }
+
+    const handleDownloadAllWorkouts = () => {
+        if (workouts.length === 0) {
+            alert('No hay rutinas para descargar')
+            return
+        }
+
+        workouts.forEach(workout => {
+            setTimeout(() => {
+                generateWorkoutPDF({ workout, client })
+            }, 100)
+        })
     }
 
     return (
@@ -80,8 +99,8 @@ export function TrainingTab({ client }: TrainingTabProps) {
                         }}
                     />
 
-                    <Button variant="outline" className="hidden sm:flex">
-                        <Download className="mr-2 h-4 w-4" /> Descargar Rutina
+                    <Button variant="outline" className="hidden sm:flex" onClick={handleDownloadAllWorkouts}>
+                        <Download className="mr-2 h-4 w-4" /> Descargar Rutinas
                     </Button>
                 </div>
             </div>
@@ -96,6 +115,7 @@ export function TrainingTab({ client }: TrainingTabProps) {
                                 onEdit={() => setEditingWorkout(workout)}
                                 onDelete={() => handleDelete(workout.id)}
                                 onView={() => setViewingWorkout(workout)}
+                                onDownload={() => handleDownloadWorkout(workout)}
                             />
                         ))}
                         {workouts.length === 0 && (
