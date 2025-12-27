@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { assignWorkoutAction, updateAssignedWorkoutAction } from '@/app/(dashboard)/clients/[id]/training-actions'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
+import { Textarea } from '@/components/ui/textarea'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
@@ -54,6 +55,9 @@ export function AssignWorkoutDialog({
     const [exercises, setExercises] = useState<any[]>([])
     const [validUntil, setValidUntil] = useState<Date | undefined>(undefined)
     const [scheduledDays, setScheduledDays] = useState<string[]>([])
+    const [notes, setNotes] = useState('')
+    const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null)
+    const [editingSets, setEditingSets] = useState<any[]>([])
 
     useEffect(() => {
         if (isOpen) {
@@ -62,6 +66,7 @@ export function AssignWorkoutDialog({
                 setExercises(Array.isArray(existingWorkout.structure) ? JSON.parse(JSON.stringify(existingWorkout.structure)) : [])
                 setValidUntil(existingWorkout.valid_until ? new Date(existingWorkout.valid_until) : undefined)
                 setScheduledDays(existingWorkout.scheduled_days || [])
+                setNotes(existingWorkout.notes || '')
                 setStep('edit')
             } else {
                 fetchTemplates()
@@ -83,6 +88,7 @@ export function AssignWorkoutDialog({
         setSelectedTemplateId('')
         setValidUntil(undefined)
         setScheduledDays([])
+        setNotes('')
     }
 
     const toggleDay = (day: string) => {
@@ -123,14 +129,72 @@ export function AssignWorkoutDialog({
         setExercises(exercises.filter((_, i) => i !== index))
     }
 
+    const handleEditExerciseSets = (index: number) => {
+        const exercise = exercises[index]
+        setEditingExerciseIndex(index)
+
+        // Load existing sets or create default
+        if (exercise.sets_detail && exercise.sets_detail.length > 0) {
+            setEditingSets(JSON.parse(JSON.stringify(exercise.sets_detail)))
+        } else {
+            // Create default sets from summary data
+            const numSets = parseInt(exercise.sets) || 3
+            setEditingSets(Array.from({ length: numSets }, () => ({
+                reps: exercise.reps || '10',
+                weight: exercise.weight || '0',
+                rest: exercise.rest || '90'
+            })))
+        }
+    }
+
+    const handleSaveEditedSets = () => {
+        if (editingExerciseIndex === null) return
+
+        const updatedExercises = [...exercises]
+        updatedExercises[editingExerciseIndex] = {
+            ...updatedExercises[editingExerciseIndex],
+            sets: editingSets.length.toString(),
+            reps: editingSets[0].reps,
+            weight: editingSets[0].weight,
+            rest: editingSets[0].rest,
+            sets_detail: editingSets
+        }
+        setExercises(updatedExercises)
+        setEditingExerciseIndex(null)
+        setEditingSets([])
+    }
+
+    const handleAddEditingSet = () => {
+        const lastSet = editingSets[editingSets.length - 1]
+        setEditingSets([...editingSets, { ...lastSet }])
+    }
+
+    const handleRemoveEditingSet = (index: number) => {
+        if (editingSets.length > 1) {
+            setEditingSets(editingSets.filter((_, i) => i !== index))
+        }
+    }
+
+    const updateEditingSet = (index: number, field: string, value: string) => {
+        const newSets = [...editingSets]
+        newSets[index] = { ...newSets[index], [field]: value }
+        setEditingSets(newSets)
+    }
+
     const handleSave = async () => {
+        if (!validUntil) {
+            alert('La fecha de revisión es obligatoria')
+            return
+        }
+
         setLoading(true)
         const payload = {
             clientId,
             name: workoutName,
             exercises,
-            validUntil: validUntil ? format(validUntil, 'yyyy-MM-dd') : undefined,
-            scheduledDays
+            validUntil: format(validUntil, 'yyyy-MM-dd'),
+            scheduledDays,
+            notes: notes.trim() || undefined
         }
 
         let result
@@ -154,7 +218,7 @@ export function AssignWorkoutDialog({
         setLoading(false)
     }
 
-    return (
+    return (<>
         <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger ? trigger : (
@@ -219,12 +283,12 @@ export function AssignWorkoutDialog({
                             </div>
 
                             <div className="space-y-2 flex flex-col">
-                                <Label>Válida hasta (Opcional)</Label>
+                                <Label>Fecha de revisión *</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !validUntil && "text-muted-foreground")}>
                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {validUntil ? format(validUntil, "PPP", { locale: es }) : <span>Seleccionar fecha</span>}
+                                            {validUntil ? format(validUntil, "PPP", { locale: es }) : <span>Seleccionar fecha *</span>}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
@@ -255,6 +319,17 @@ export function AssignWorkoutDialog({
                             </div>
                         </div>
 
+                        {/* Notes field */}
+                        <div className="space-y-2">
+                            <Label>Notas (Opcional)</Label>
+                            <Textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Agregar notas o instrucciones especiales..."
+                                rows={3}
+                            />
+                        </div>
+
                         <div className="space-y-4 border rounded-md p-4 bg-muted/10">
                             <h4 className="font-semibold text-sm">Ejercicios</h4>
                             <div className="space-y-2">
@@ -269,6 +344,9 @@ export function AssignWorkoutDialog({
                                                 {ex.rest && <span>{ex.rest}s descanso</span>}
                                             </div>
                                         </div>
+                                        <Button variant="ghost" size="icon" onClick={() => handleEditExerciseSets(index)} className="h-8 w-8 text-primary">
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
                                         <Button variant="ghost" size="icon" onClick={() => handleRemoveExercise(index)} className="h-8 w-8 text-destructive">
                                             <X className="h-4 w-4" />
                                         </Button>
@@ -285,7 +363,7 @@ export function AssignWorkoutDialog({
 
                         <div className="flex justify-end gap-3">
                             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                            <Button onClick={handleSave} disabled={loading || !workoutName}>
+                            <Button onClick={handleSave} disabled={loading || !workoutName || !validUntil}>
                                 {loading ? 'Guardando...' : (existingWorkout ? 'Guardar Cambios' : 'Asignar Rutina')}
                             </Button>
                         </div>
@@ -293,5 +371,76 @@ export function AssignWorkoutDialog({
                 )}
             </DialogContent>
         </Dialog>
+
+        {/* Edit Exercise Sets Dialog */}
+        {editingExerciseIndex !== null && (
+            <Dialog open={editingExerciseIndex !== null} onOpenChange={() => setEditingExerciseIndex(null)}>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle>Editar Series - {exercises[editingExerciseIndex || 0]?.name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="border rounded-md overflow-hidden">
+                            <div className="grid grid-cols-4 gap-2 p-2 bg-muted/50 font-medium text-sm">
+                                <div className="text-center">Set</div>
+                                <div className="text-center">Repes</div>
+                                <div className="text-center">Peso (kg)</div>
+                                <div className="text-center">Desc (s)</div>
+                            </div>
+                            {editingSets.map((set, index) => (
+                                <div key={index} className="grid grid-cols-4 gap-2 p-2 border-t items-center">
+                                    <div className="text-center font-medium">{index + 1}</div>
+                                    <Input
+                                        className="h-8 text-center"
+                                        value={set.reps}
+                                        onChange={(e) => updateEditingSet(index, 'reps', e.target.value)}
+                                    />
+                                    <Input
+                                        className="h-8 text-center"
+                                        value={set.weight}
+                                        onChange={(e) => updateEditingSet(index, 'weight', e.target.value)}
+                                    />
+                                    <div className="flex gap-1">
+                                        <Input
+                                            className="h-8 text-center flex-1"
+                                            value={set.rest}
+                                            onChange={(e) => updateEditingSet(index, 'rest', e.target.value)}
+                                        />
+                                        {editingSets.length > 1 && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleRemoveEditingSet(index)}
+                                                className="h-8 w-8 text-destructive"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAddEditingSet}
+                            className="w-full"
+                        >
+                            <Plus className="mr-2 h-3 w-3" /> Agregar Serie
+                        </Button>
+                        <div className="flex justify-end gap-3">
+                            <Button variant="outline" onClick={() => setEditingExerciseIndex(null)}>
+                                Cancelar
+                            </Button>
+                            <Button onClick={handleSaveEditedSets}>
+                                Guardar Cambios
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        )}
+    </>
     )
 }

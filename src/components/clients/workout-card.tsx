@@ -8,7 +8,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Edit2, Eye, Trash2 } from "lucide-react"
+import { MoreHorizontal, Edit2, Eye, Trash2, Download } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -17,9 +17,10 @@ interface WorkoutCardProps {
     onEdit: () => void
     onDelete: () => void
     onView?: () => void
+    onDownload?: () => void
 }
 
-export function WorkoutCard({ workout, onEdit, onDelete, onView }: WorkoutCardProps) {
+export function WorkoutCard({ workout, onEdit, onDelete, onView, onDownload }: WorkoutCardProps) {
     const exercises = Array.isArray(workout.structure) ? workout.structure : []
     const exerciseCount = exercises.length
 
@@ -49,6 +50,9 @@ export function WorkoutCard({ workout, onEdit, onDelete, onView }: WorkoutCardPr
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={onView}>
                                 <Eye className="mr-2 h-4 w-4" /> Ver detalle
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={onDownload}>
+                                <Download className="mr-2 h-4 w-4" /> Descargar PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={onEdit}>
                                 <Edit2 className="mr-2 h-4 w-4" /> Editar

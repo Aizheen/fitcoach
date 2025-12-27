@@ -7,9 +7,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Download, MessageCircle } from "lucide-react"
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { Download } from "lucide-react"
+import { generateWorkoutPDF } from '@/lib/pdf-utils'
 
 interface WorkoutDetailDialogProps {
     isOpen: boolean
@@ -29,80 +28,7 @@ export function WorkoutDetailDialog({ isOpen, onClose, workout, client }: Workou
         : null
 
     const handleDownloadPDF = () => {
-        const doc = new jsPDF()
-
-        // Header
-        doc.setFontSize(18)
-        doc.text(`Rutina: ${workout.name}`, 14, 20)
-
-        doc.setFontSize(12)
-        if (client) {
-            doc.text(`Cliente: ${client.full_name || 'N/A'}`, 14, 30)
-            if (scheduledDays) doc.text(`Días: ${scheduledDays}`, 14, 36)
-        }
-
-        // Prepare table data
-        const tableBody: any[] = []
-
-        exercises.forEach((ex: any) => {
-            // Title row for exercise
-            tableBody.push([{ content: ex.name, colSpan: 5, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }])
-
-            const setsDetail = ex.sets_detail || []
-            if (setsDetail.length > 0) {
-                setsDetail.forEach((set: any, idx: number) => {
-                    tableBody.push([
-                        `Set ${idx + 1}`,
-                        `${set.reps}`,
-                        `${set.weight}kg`,
-                        `${set.rest}s`,
-                        ''
-                    ])
-                })
-            } else {
-                tableBody.push([
-                    'Series Generales',
-                    `${ex.reps}`,
-                    '-',
-                    '-',
-                    `${ex.sets} series`
-                ])
-            }
-        })
-
-        autoTable(doc, {
-            startY: client ? 45 : 35, // Adjust start if client info is missing
-            head: [['Detalle', 'Repes', 'Peso', 'Descanso', 'Notas']],
-            body: tableBody,
-            theme: 'grid',
-            headStyles: { fillColor: [234, 88, 12] } // Orange-600 roughly
-        })
-
-        if (workout.description) {
-            const finalY = (doc as any).lastAutoTable.finalY || 45
-            doc.text("Notas generales:", 14, finalY + 10)
-            doc.setFontSize(10)
-            doc.text(workout.description, 14, finalY + 16, { maxWidth: 180 })
-        }
-
-        doc.save(`Rutina_${workout.name.replace(/\s+/g, '_')}.pdf`)
-    }
-
-    const handleShareWhatsApp = () => {
-        if (!client || !client.phone) {
-            alert("El cliente no tiene un número de teléfono registrado.")
-            return
-        }
-
-        // Clean phone number (remove spaces, dashes, parentheses)
-        const cleanPhone = client.phone.replace(/[^0-9]/g, '')
-
-        const message = `Hola ${client.full_name || ''}
-Ya tenés lista la nueva rutina "${workout.name}".
-Si algo no te cierra o tenés dudas, avisame!.`
-
-        const encoded = encodeURIComponent(message)
-        window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, '_blank')
+        generateWorkoutPDF({ workout, client })
     }
 
     return (
@@ -165,15 +91,15 @@ Si algo no te cierra o tenés dudas, avisame!.`
                         )}
                     </div>
 
-                    <div className="space-y-2">
-                        <h3 className="font-semibold text-base">Notas:</h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                            {(workout.description && workout.description.trim() !== "")
-                                ? workout.description
-                                : "Sin notas adicionales."
-                            }
-                        </p>
-                    </div>
+                    {/* Only show notes section if notes exist */}
+                    {workout.notes && workout.notes.trim() !== "" && (
+                        <div className="space-y-2">
+                            <h3 className="font-semibold text-base">Notas:</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                {workout.notes}
+                            </p>
+                        </div>
+                    )}
 
                     {/* Actions Footer */}
                     <div className="flex justify-end gap-3 pt-4 border-t sticky bottom-0 bg-background">
@@ -181,12 +107,6 @@ Si algo no te cierra o tenés dudas, avisame!.`
                             <Download className="mr-2 h-4 w-4" />
                             Descargar PDF
                         </Button>
-                        {client && (
-                            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleShareWhatsApp}>
-                                <MessageCircle className="mr-2 h-4 w-4" />
-                                Compartir por WhatsApp
-                            </Button>
-                        )}
                     </div>
                 </div>
             </DialogContent>
