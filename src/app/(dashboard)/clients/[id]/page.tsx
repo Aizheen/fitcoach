@@ -39,12 +39,12 @@ export default async function ClientNotesPage({
             <ProfileHeader client={client} />
 
             <Tabs defaultValue={defaultTab} className="w-full space-y-4">
-                <TabsList>
-                    <TabsTrigger value="profile">Perfil</TabsTrigger>
-                    <TabsTrigger value="checkin">Check-in</TabsTrigger>
-                    <TabsTrigger value="training">Entrenamiento</TabsTrigger>
-                    <TabsTrigger value="diet">Plan de comidas</TabsTrigger>
-                    <TabsTrigger value="settings">Ajustes</TabsTrigger>
+                <TabsList className="w-full overflow-x-auto flex flex-nowrap justify-start md:justify-center">
+                    <TabsTrigger value="profile" className="text-xs md:text-sm px-2 md:px-3">Perfil</TabsTrigger>
+                    <TabsTrigger value="checkin" className="text-xs md:text-sm px-2 md:px-3">Check-in</TabsTrigger>
+                    <TabsTrigger value="training" className="text-xs md:text-sm px-2 md:px-3">Entrenamiento</TabsTrigger>
+                    <TabsTrigger value="diet" className="text-xs md:text-sm px-2 md:px-3">Comidas</TabsTrigger>
+                    <TabsTrigger value="settings" className="text-xs md:text-sm px-2 md:px-3">Ajustes</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="profile" className="space-y-4">

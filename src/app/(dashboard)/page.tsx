@@ -92,25 +92,25 @@ export default async function DashboardPage() {
         .limit(5)
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
                     {greeting}, <span className="text-primary">{userName}</span>
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm md:text-base">
                     Aquí tenés un resumen de tu actividad hoy.
                 </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                 {stats.map((stat, index) => (
                     <StatsCard key={index} {...stat} />
                 ))}
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <div className="flex flex-col gap-4 lg:grid lg:grid-cols-7">
                 {/* Activity Feed */}
-                <Card className="col-span-4">
+                <Card className="lg:col-span-4">
                     <CardHeader>
                         <CardTitle>Actividad Reciente</CardTitle>
                         <CardDescription>
@@ -145,7 +145,7 @@ export default async function DashboardPage() {
                 </Card>
 
                 {/* Alerts / Tasks */}
-                <Card className="col-span-3">
+                <Card className="lg:col-span-3">
                     <CardHeader>
                         <CardTitle>Accesos Rápidos</CardTitle>
                         <CardDescription>

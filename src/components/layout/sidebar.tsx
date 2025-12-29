@@ -18,6 +18,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import { useSidebar } from './sidebar-context'
+import {
+    Sheet,
+    SheetContent,
+} from '@/components/ui/sheet'
 
 const navigation = [
     { name: 'Inicio', href: '/', icon: Home },
@@ -28,10 +32,9 @@ const navigation = [
     { name: 'Ajustes', href: '/settings', icon: Settings },
 ]
 
-export function Sidebar() {
+function SidebarContent({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
     const pathname = usePathname()
     const router = useRouter()
-    const { collapsed, toggleSidebar } = useSidebar()
 
     const handleSignOut = async () => {
         const supabase = createClient()
@@ -39,13 +42,12 @@ export function Sidebar() {
         router.push('/login')
     }
 
+    const handleLinkClick = () => {
+        if (onNavigate) onNavigate()
+    }
+
     return (
-        <div
-            className={cn(
-                "flex h-full flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
-                collapsed ? "w-[70px]" : "w-64"
-            )}
-        >
+        <>
             <div className={cn(
                 "flex h-16 items-center px-4",
                 collapsed ? "justify-center" : "justify-start"
@@ -65,13 +67,6 @@ export function Sidebar() {
                 <div className="border-b border-sidebar-border" />
             </div>
 
-            {/* Toggle Button Container */}
-            <div className="flex justify-end px-2 py-2">
-                <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-6 w-6 text-muted-foreground hover:text-primary">
-                    {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-                </Button>
-            </div>
-
             <div className="flex-1 flex flex-col gap-1 px-3 overflow-y-auto">
                 {navigation.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
@@ -80,6 +75,7 @@ export function Sidebar() {
                             key={item.name}
                             href={item.href}
                             prefetch={true}
+                            onClick={handleLinkClick}
                             className={cn(
                                 "flex items-center rounded-lg py-2.5 text-sm font-medium transition-colors w-full text-left",
                                 collapsed ? "justify-center px-2" : "px-3 gap-3",
@@ -110,6 +106,38 @@ export function Sidebar() {
                     {!collapsed && "Cerrar sesión"}
                 </Button>
             </div>
-        </div>
+        </>
     )
 }
+
+export function Sidebar() {
+    const { collapsed, toggleSidebar, mobileOpen, setMobileOpen } = useSidebar()
+
+    return (
+        <>
+            {/* Desktop Sidebar */}
+            <div
+                className={cn(
+                    "hidden md:flex h-full flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
+                    collapsed ? "w-[70px]" : "w-64"
+                )}
+            >
+                {/* Toggle Button Container - Desktop only */}
+                <div className="flex justify-end px-2 py-2 mt-16">
+                    <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-6 w-6 text-muted-foreground hover:text-primary">
+                        {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+                    </Button>
+                </div>
+                <SidebarContent collapsed={collapsed} />
+            </div>
+
+            {/* Mobile Sidebar - Sheet */}
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                <SheetContent side="left" className="w-64 p-0 bg-sidebar">
+                    <SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} />
+                </SheetContent>
+            </Sheet>
+        </>
+    )
+}
+

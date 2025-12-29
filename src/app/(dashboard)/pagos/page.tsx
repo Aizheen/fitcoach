@@ -221,8 +221,8 @@ export default function PagosPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Tus Pagos y Planes</h1>
-                    <p className="text-muted-foreground">
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tus Pagos y Planes</h1>
+                    <p className="text-muted-foreground text-sm md:text-base">
                         Gestiona los pagos y planes de tus asesorados
                     </p>
                 </div>
