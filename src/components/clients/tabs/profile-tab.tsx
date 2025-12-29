@@ -127,7 +127,7 @@ export function ProfileTab({ client }: ProfileTabProps) {
         <div className="space-y-6 animate-in fade-in duration-500">
 
             {/* Top Cards: Objectives */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
                 <Card className="bg-background">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base font-bold">Objetivo personal</CardTitle>
@@ -161,7 +161,7 @@ export function ProfileTab({ client }: ProfileTabProps) {
             </div>
 
             {/* Middle Row: Metrics & Photos */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
 
                 {/* Weight Card */}
                 <Card className="flex flex-col">
@@ -300,7 +300,7 @@ export function ProfileTab({ client }: ProfileTabProps) {
             </div>
 
             {/* Bottom Row */}
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
                 {/* Updates */}
                 <Card className="md:col-span-2">
                     <CardHeader>

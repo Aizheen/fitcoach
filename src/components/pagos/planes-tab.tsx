@@ -118,7 +118,7 @@ export function PlanesTab() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {plans.map((plan) => (
                         <Card key={plan.id}>
                             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
