@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -8,7 +8,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Edit2, Eye, Trash2, Download } from "lucide-react"
+import { MoreHorizontal, Edit2, Eye, Trash2, Download, Play } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -18,9 +18,10 @@ interface WorkoutCardProps {
     onDelete: () => void
     onView?: () => void
     onDownload?: () => void
+    onStart?: () => void
 }
 
-export function WorkoutCard({ workout, onEdit, onDelete, onView, onDownload }: WorkoutCardProps) {
+export function WorkoutCard({ workout, onEdit, onDelete, onView, onDownload, onStart }: WorkoutCardProps) {
     const exercises = Array.isArray(workout.structure) ? workout.structure : []
     const exerciseCount = exercises.length
 
@@ -35,7 +36,7 @@ export function WorkoutCard({ workout, onEdit, onDelete, onView, onDownload }: W
         : "Sin fecha de revisión"
 
     return (
-        <Card className="relative hover:shadow-md transition-shadow">
+        <Card className="relative hover:shadow-md transition-shadow flex flex-col h-full">
             <CardHeader className="p-4 pb-2">
                 <div className="flex justify-between items-start">
                     <span className="text-xs font-medium text-primary truncate max-w-[80%]">
@@ -65,13 +66,20 @@ export function WorkoutCard({ workout, onEdit, onDelete, onView, onDownload }: W
                 </div>
                 <CardTitle className="text-lg font-bold mt-1 mb-1">{workout.name}</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0">
+            <CardContent className="p-4 pt-0 flex-1">
                 <div className="flex items-center text-sm text-muted-foreground mt-2">
                     <span className="font-semibold text-foreground mr-1">{exerciseCount} ejercicios</span>
                     <span className="mx-2">|</span>
                     <span className="truncate">{scheduledDays}</span>
                 </div>
             </CardContent>
+            {onStart && (
+                <CardFooter className="p-4 pt-0">
+                    <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" onClick={onStart}>
+                        <Play className="mr-2 h-4 w-4" /> Comenzar
+                    </Button>
+                </CardFooter>
+            )}
         </Card>
     )
 }

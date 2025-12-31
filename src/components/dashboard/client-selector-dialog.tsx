@@ -12,10 +12,12 @@ import { createClient } from '@/lib/supabase/client'
 
 export function ClientSelectorDialog({
     children,
-    triggerClass
+    triggerClass,
+    mode = 'checkin'
 }: {
     children?: React.ReactNode
     triggerClass?: string
+    mode?: 'checkin' | 'training'
 }) {
     const [open, setOpen] = useState(false)
     const [clients, setClients] = useState<any[]>([])
@@ -39,7 +41,11 @@ export function ClientSelectorDialog({
 
     const handleSelect = (clientId: string) => {
         setOpen(false)
-        router.push(`/clients/${clientId}?tab=checkin&action=new`)
+        if (mode === 'training') {
+            router.push(`/clients/${clientId}?tab=training`)
+        } else {
+            router.push(`/clients/${clientId}?tab=checkin&action=new`)
+        }
     }
 
     return (

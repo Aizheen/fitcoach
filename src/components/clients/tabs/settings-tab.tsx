@@ -31,7 +31,12 @@ export function SettingsTab({ client }: { client: any }) {
         goal_specific: client.goal_specific || '',
         activity_level: client.activity_level || '',
         target_weight: client.target_weight || '',
-        target_fat: client.target_fat || ''
+        target_fat: client.target_fat || '',
+        training_frequency: client.training_frequency || '',
+        target_calories: client.target_calories || '',
+        target_protein: client.target_protein || '',
+        target_carbs: client.target_carbs || '',
+        target_fats: client.target_fats || ''
     })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -55,6 +60,11 @@ export function SettingsTab({ client }: { client: any }) {
             initial_body_fat: formData.initial_body_fat ? parseFloat(formData.initial_body_fat) : null,
             target_weight: formData.target_weight ? parseFloat(formData.target_weight) : null,
             target_fat: formData.target_fat ? parseFloat(formData.target_fat) : null,
+            training_frequency: formData.training_frequency ? parseInt(formData.training_frequency) : null,
+            target_calories: formData.target_calories ? parseInt(formData.target_calories) : null,
+            target_protein: formData.target_protein ? parseInt(formData.target_protein) : null,
+            target_carbs: formData.target_carbs ? parseInt(formData.target_carbs) : null,
+            target_fats: formData.target_fats ? parseInt(formData.target_fats) : null,
         }
 
         const result = await updateClientAction(client.id, dataToUpdate)
@@ -188,6 +198,20 @@ export function SettingsTab({ client }: { client: any }) {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="training_frequency">Días de entreno (Semanal)</Label>
+                                    <Select value={String(formData.training_frequency)} onValueChange={(val) => handleSelectChange('training_frequency', val)}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Seleccionar" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {[1, 2, 3, 4, 5, 6, 7].map(d => (
+                                                <SelectItem key={d} value={d.toString()}>{d} días</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -218,6 +242,31 @@ export function SettingsTab({ client }: { client: any }) {
                         </CardContent>
                     </Card>
 
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Objetivos Nutricionales</CardTitle>
+                            <CardDescription>Macronutrientes diarios calculados o personalizados.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-4 md:grid-cols-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="target_calories">Calorías (kcal)</Label>
+                                <Input id="target_calories" name="target_calories" type="number" value={formData.target_calories} onChange={handleChange} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="target_protein">Proteínas (g)</Label>
+                                <Input id="target_protein" name="target_protein" type="number" value={formData.target_protein} onChange={handleChange} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="target_carbs">Carbohidratos (g)</Label>
+                                <Input id="target_carbs" name="target_carbs" type="number" value={formData.target_carbs} onChange={handleChange} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="target_fats">Grasas (g)</Label>
+                                <Input id="target_fats" name="target_fats" type="number" value={formData.target_fats} onChange={handleChange} />
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Botón Guardar */}
                     <div className="flex justify-end">
                         <Button type="submit" disabled={loading} className="w-full md:w-auto">
@@ -225,8 +274,8 @@ export function SettingsTab({ client }: { client: any }) {
                             Guardar Cambios
                         </Button>
                     </div>
-                </div>
-            </form>
+                </div >
+            </form >
 
             <div className="mt-8 border-t pt-8">
                 <AllergenSelector
@@ -264,6 +313,6 @@ export function SettingsTab({ client }: { client: any }) {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     )
 }

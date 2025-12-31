@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Calendar as CalendarIcon, Download, Plus } from 'lucide-react'
 import { AssignWorkoutDialog } from '../assign-workout-dialog'
 import { deleteAssignedWorkoutAction, updateAssignedWorkoutAction } from '@/app/(dashboard)/clients/[id]/training-actions'
+import { getOrCreateSession } from '@/app/(dashboard)/session/actions'
 import { WorkoutCard } from '../workout-card'
 import { CalendarView } from '../calendar-view'
 import { cn } from '@/lib/utils'
@@ -18,6 +20,7 @@ interface TrainingTabProps {
 }
 
 export function TrainingTab({ client }: TrainingTabProps) {
+    const router = useRouter()
     const [workouts, setWorkouts] = useState<any[]>([])
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
     const [editingWorkout, setEditingWorkout] = useState<any>(null)
@@ -78,6 +81,21 @@ export function TrainingTab({ client }: TrainingTabProps) {
         })
     }
 
+    const handleStartSession = async (workoutId: string) => {
+        try {
+            const result = await getOrCreateSession(client.id, workoutId)
+            if (result.session) {
+                router.push(`/session/${result.session.id}`)
+            } else if (result.error) {
+                console.error("Error starting session:", result.error)
+                alert("Error al iniciar sesión de entrenamiento")
+            }
+        } catch (err) {
+            console.error(err)
+            alert("Error inesperado")
+        }
+    }
+
     return (
         <div className="space-y-6 h-full flex flex-col">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -100,9 +118,11 @@ export function TrainingTab({ client }: TrainingTabProps) {
                         }}
                     />
 
-                    <Button variant="outline" className="hidden sm:flex" onClick={handleDownloadAllWorkouts}>
-                        <Download className="mr-2 h-4 w-4" /> Descargar Rutinas
-                    </Button>
+                    {workouts.length > 0 && (
+                        <Button variant="outline" className="hidden sm:flex" onClick={handleDownloadAllWorkouts}>
+                            <Download className="mr-2 h-4 w-4" /> Descargar Rutinas
+                        </Button>
+                    )}
                 </div>
             </div>
 

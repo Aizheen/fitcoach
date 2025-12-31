@@ -1,45 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { AssignDietDialog } from '../assign-diet-dialog'
-import { updateClientAction } from '@/app/(dashboard)/clients/actions'
-import { deleteAssignedDietAction } from '@/app/(dashboard)/clients/[id]/diet-actions'
-import { DietCard } from '../diet-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { WeeklyMealPlanContainer } from '../meal-plan/weekly-meal-plan-container'
 
 export function DietTab({ client }: { client: any }) {
-    const [diets, setDiets] = useState<any[]>([])
-
-    useEffect(() => {
-        fetchDiets()
-    }, [client.id])
-
-    const fetchDiets = async () => {
-        try {
-            const supabase = createClient()
-            const { data, error } = await supabase
-                .from('assigned_diets')
-                .select('*')
-                .eq('client_id', client.id)
-                .order('created_at', { ascending: true })
-
-            if (error) {
-                console.error("Error fetching diets:", error)
-            } else if (data) {
-                setDiets(data)
-            }
-        } catch (err) {
-            console.error("UNEXPECTED ERROR in DietTab fetchDiets:", err)
-        }
-    }
-
-    const handleDelete = async (id: string) => {
-        if (confirm("¿Eliminar esta comida?")) {
-            await deleteAssignedDietAction(id, client.id)
-            fetchDiets()
-        }
-    }
 
     // Prepare read-only data
     const preferenceLabel = client.dietary_preference
@@ -52,6 +16,38 @@ export function DietTab({ client }: { client: any }) {
 
     return (
         <div className="space-y-6">
+            {/* Macronutrients Summary */}
+            <Card className="bg-primary/5 border-primary/20">
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                        Objetivos Nutricionales
+                        <span className="text-xs font-normal text-muted-foreground bg-background px-2 py-1 rounded-full border">
+                            Calculado automáticamente
+                        </span>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <div className="p-3 bg-background rounded-lg border shadow-sm">
+                            <div className="text-2xl font-bold text-primary">{client.target_calories || 0}</div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Kcal</div>
+                        </div>
+                        <div className="p-3 bg-background rounded-lg border shadow-sm">
+                            <div className="text-2xl font-bold">{client.target_protein || 0}g</div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Proteína</div>
+                        </div>
+                        <div className="p-3 bg-background rounded-lg border shadow-sm">
+                            <div className="text-2xl font-bold">{client.target_carbs || 0}g</div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Carbos</div>
+                        </div>
+                        <div className="p-3 bg-background rounded-lg border shadow-sm">
+                            <div className="text-2xl font-bold">{client.target_fats || 0}g</div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Grasas</div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
             <div className="grid gap-4 md:grid-cols-2">
                 <Card>
                     <CardHeader className="pb-2">
@@ -71,41 +67,12 @@ export function DietTab({ client }: { client: any }) {
                 </Card>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t">
-                <h3 className="font-bold text-lg">Plan de Alimentación</h3>
-                <AssignDietDialog client={client} />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {diets.map(diet => (
-                    <DietCard
-                        key={diet.id}
-                        diet={diet}
-                        onEdit={() => { /* TODO: Implement Edit Dialog */ alert("Edición completa pendiente de implementar (Dialog detalle)") }}
-                        onDelete={() => handleDelete(diet.id)}
-                    />
-                ))}
-                {diets.length === 0 && (
-                    <div className="col-span-full border-2 border-dashed rounded-lg p-12 text-center text-muted-foreground">
-                        No hay comidas asignadas. Comienza agregando una.
-                    </div>
-                )}
-            </div>
-
-            {/* Summary Totals Footer? */}
-            {diets.length > 0 && (
-                <div className="bg-muted p-4 rounded-lg flex justify-between items-center text-sm">
-                    <span className="font-semibold">Total Diario Estimado:</span>
-                    <div className="flex gap-4">
-                        <span>
-                            {diets.reduce((acc, d) => acc + (d.data?.macros?.total_calories || 0), 0)} Kcal
-                        </span>
-                        <span className="text-blue-600 font-bold">
-                            {diets.reduce((acc, d) => acc + (d.data?.macros?.total_proteins || 0), 0)}g Prot
-                        </span>
-                    </div>
-                </div>
-            )}
+            <WeeklyMealPlanContainer
+                clientId={client.id}
+                clientName={client.full_name}
+                clientAllergens={client.allergens}
+                clientPreference={client.dietary_preference} // Assuming this field exists, need to verify or use generic 'preference'
+            />
         </div>
     )
 }

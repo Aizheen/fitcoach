@@ -35,34 +35,34 @@ export default async function ClientNotesPage({
     }
 
     return (
-        <div className="space-y-6">
-            <ProfileHeader client={client} />
+        <Tabs defaultValue={defaultTab} className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
+                <ProfileHeader client={client} />
 
-            <Tabs defaultValue={defaultTab} className="w-full space-y-4">
-                <TabsList className="w-full overflow-x-auto flex flex-nowrap justify-start md:justify-center">
-                    <TabsTrigger value="profile" className="text-xs md:text-sm px-2 md:px-3">Perfil</TabsTrigger>
-                    <TabsTrigger value="checkin" className="text-xs md:text-sm px-2 md:px-3">Check-in</TabsTrigger>
-                    <TabsTrigger value="training" className="text-xs md:text-sm px-2 md:px-3">Entrenamiento</TabsTrigger>
-                    <TabsTrigger value="diet" className="text-xs md:text-sm px-2 md:px-3">Comidas</TabsTrigger>
-                    <TabsTrigger value="settings" className="text-xs md:text-sm px-2 md:px-3">Ajustes</TabsTrigger>
+                <TabsList className="h-9">
+                    <TabsTrigger value="profile">Perfil</TabsTrigger>
+                    <TabsTrigger value="checkin">Check-In</TabsTrigger>
+                    <TabsTrigger value="training">Entrenamiento</TabsTrigger>
+                    <TabsTrigger value="diet">Comidas</TabsTrigger>
+                    <TabsTrigger value="settings">Ajustes</TabsTrigger>
                 </TabsList>
+            </div>
 
-                <TabsContent value="profile" className="space-y-4">
-                    <ProfileTab client={client} />
-                </TabsContent>
-                <TabsContent value="checkin">
-                    <CheckinTab client={client} />
-                </TabsContent>
-                <TabsContent value="training">
-                    <TrainingTab client={client} />
-                </TabsContent>
-                <TabsContent value="diet">
-                    <DietTab client={client} />
-                </TabsContent>
-                <TabsContent value="settings">
-                    <SettingsTab client={client} />
-                </TabsContent>
-            </Tabs>
-        </div>
+            <TabsContent value="profile" className="space-y-4 outline-none text-foreground">
+                <ProfileTab client={client} />
+            </TabsContent>
+            <TabsContent value="checkin" className="outline-none text-foreground">
+                <CheckinTab client={client} />
+            </TabsContent>
+            <TabsContent value="training" className="outline-none text-foreground">
+                <TrainingTab client={client} />
+            </TabsContent>
+            <TabsContent value="diet" className="outline-none text-foreground">
+                <DietTab client={client} />
+            </TabsContent>
+            <TabsContent value="settings" className="outline-none text-foreground">
+                <SettingsTab client={client} />
+            </TabsContent>
+        </Tabs>
     )
 }

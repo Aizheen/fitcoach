@@ -29,7 +29,7 @@ const navigation = [
     { name: 'Ajustes', href: '/settings', icon: Settings },
 ]
 
-function SidebarContent({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
+function SidebarContent({ collapsed, onNavigate, toggleSidebar }: { collapsed: boolean; onNavigate?: () => void; toggleSidebar?: () => void }) {
     const pathname = usePathname()
     const router = useRouter()
 
@@ -47,14 +47,26 @@ function SidebarContent({ collapsed, onNavigate }: { collapsed: boolean; onNavig
         <>
             <div className={cn(
                 "flex h-16 items-center px-4",
-                collapsed ? "justify-center" : "justify-start"
+                collapsed ? "justify-center" : "justify-between"
             )}>
                 {!collapsed && (
-                    <div className="flex items-center justify-start px-2 w-full">
-                        <Image src="/orbit_logo_black.png" alt="Orbit" width={120} height={40} className="h-8 w-auto object-contain" priority />
-                    </div>
+                    <>
+                        <div className="flex items-center justify-start px-2">
+                            <Image src="/orbit_logo_black.png" alt="Orbit" width={120} height={40} className="h-8 w-auto object-contain" priority />
+                        </div>
+                        {toggleSidebar && (
+                            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-6 w-6 text-muted-foreground hover:text-primary">
+                                <PanelLeftClose className="h-4 w-4" />
+                            </Button>
+                        )}
+                    </>
                 )}
-                {collapsed && (
+                {collapsed && toggleSidebar && (
+                    <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8 text-muted-foreground hover:text-primary">
+                        <PanelLeftOpen className="h-4 w-4" />
+                    </Button>
+                )}
+                {collapsed && !toggleSidebar && (
                     <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">O</div>
                 )}
             </div>
@@ -119,13 +131,7 @@ export function Sidebar() {
                     collapsed ? "w-[70px]" : "w-64"
                 )}
             >
-                {/* Toggle Button Container - Desktop only */}
-                <div className="flex justify-end px-2 py-2 mt-2">
-                    <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-6 w-6 text-muted-foreground hover:text-primary">
-                        {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-                    </Button>
-                </div>
-                <SidebarContent collapsed={collapsed} />
+                <SidebarContent collapsed={collapsed} toggleSidebar={toggleSidebar} />
             </div>
 
             {/* Mobile Sidebar - Sheet */}
