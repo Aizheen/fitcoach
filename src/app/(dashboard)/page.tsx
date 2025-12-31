@@ -1,6 +1,6 @@
 
 import { StatsCard } from '@/components/dashboard/stats-cards'
-import { Users, AlertCircle, UserPlus, Activity, ArrowRight, UserCheck, Dumbbell } from 'lucide-react'
+import { Users, AlertCircle, UserPlus, Activity, ArrowRight, UserCheck, Dumbbell, Play } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getDashboardStats, getUpcomingPayments } from '@/lib/actions/dashboard'
 import { UpcomingPayments } from '@/components/dashboard/upcoming-payments'
@@ -76,12 +76,20 @@ export default async function DashboardPage() {
     return (
         <div className="space-y-6 md:space-y-8">
             <div>
-                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                    {greeting}, <span className="text-primary">{userName}</span>
+                <h2 className="text-2xl md:text-3xl font-medium tracking-tight">
+                    {greeting}, <span className="text-primary font-bold">{userName}</span>
                 </h2>
                 <p className="text-muted-foreground text-sm md:text-base">
                     Aquí tienes el resumen de tu actividad con los asesorados.
                 </p>
+            </div>
+
+
+
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                {statCards.map((stat, index) => (
+                    <StatsCard key={index} {...stat} />
+                ))}
             </div>
 
             {/* Quick Actions Container */}
@@ -131,15 +139,24 @@ export default async function DashboardPage() {
                                 </Button>
                             </ClientSelectorDialog>
                         </div>
+
+                        {/* Registrar Entrenamiento */}
+                        <div className="flex-1 w-full md:hidden">
+                            <ClientSelectorDialog mode="training">
+                                <Button variant="outline" className="w-full h-auto py-3 justify-start gap-3 border-dashed hover:border-solid hover:bg-muted/50 group">
+                                    <div className="p-2 rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                                        <Play className="h-4 w-4" />
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="font-medium block">Registrar Entrenamiento</span>
+                                        <span className="text-xs text-muted-foreground hidden sm:block">Iniciar sesión</span>
+                                    </div>
+                                </Button>
+                            </ClientSelectorDialog>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
-
-            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-                {statCards.map((stat, index) => (
-                    <StatsCard key={index} {...stat} />
-                ))}
-            </div>
 
             <div className="space-y-6">
                 {/* Overdue Payments */}

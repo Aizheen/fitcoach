@@ -128,32 +128,32 @@ export function ProfileTab({ client }: ProfileTabProps) {
 
             {/* Top Cards: Objectives */}
             <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-                <Card className="bg-background">
-                    <CardHeader className="pb-2">
+                <Card className="bg-background shadow-sm">
+                    <CardHeader className="p-4 pb-1">
                         <CardTitle className="text-base font-bold">Objetivo personal</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">
+                    <CardContent className="p-4 pt-1">
+                        <p className="text-sm text-muted-foreground leading-snug">
                             {client.goal_text || "Sin objetivo definido."}
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="bg-background">
-                    <CardHeader className="pb-2">
+                <Card className="bg-background shadow-sm">
+                    <CardHeader className="p-4 pb-1">
                         <CardTitle className="text-base font-bold">Objetivo a realizar</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground capitalize">
+                    <CardContent className="p-4 pt-1">
+                        <p className="text-sm text-muted-foreground capitalize leading-snug">
                             {client.goal_specific ? (goalTranslations[client.goal_specific] || client.goal_specific.replace(/_/g, ' ')) : "Mantener"}
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="bg-background">
-                    <CardHeader className="pb-2">
+                <Card className="bg-background shadow-sm">
+                    <CardHeader className="p-4 pb-1">
                         <CardTitle className="text-base font-bold">Nivel de actividad</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground capitalize">
+                    <CardContent className="p-4 pt-1">
+                        <p className="text-sm text-muted-foreground capitalize leading-snug">
                             {client.activity_level ? (activityTranslations[client.activity_level] || client.activity_level.replace(/_/g, ' ')) : "Moderado"}
                         </p>
                     </CardContent>
@@ -174,8 +174,13 @@ export function ProfileTab({ client }: ProfileTabProps) {
                         )}
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col">
-                        <div className="flex items-end gap-2 mb-4">
-                            <span className="text-3xl font-bold">{currentWeight} kg</span>
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="text-3xl font-bold">{currentWeight ? `${currentWeight} kg` : '-- kg'}</span>
+                            {checkins.length === 0 && currentWeight && (
+                                <Badge variant="outline" className="text-[10px] text-muted-foreground uppercase py-0 px-1.5 h-5">
+                                    Inicial
+                                </Badge>
+                            )}
                             {weightDiff !== 0 && (
                                 <Badge
                                     variant="secondary"
@@ -187,28 +192,37 @@ export function ProfileTab({ client }: ProfileTabProps) {
                             )}
                         </div>
                         <div className="h-[150px] w-full mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={weightData}>
-                                    <XAxis
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fontSize: 10, fill: '#888' }}
-                                    />
-                                    <RechartsTooltip
-                                        contentStyle={{ borderRadius: '8px', border: 'none' }}
-                                        cursor={{ fill: '#f4f4f5' }}
-                                    />
-                                    <Bar dataKey="weight" radius={[4, 4, 0, 0]}>
-                                        {weightData.map((entry, index) => (
-                                            <Cell
-                                                key={`cell-${index}`}
-                                                fill={index === weightData.length - 1 ? '#5254D9' : '#B2B3F5'}
-                                            />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {checkins.length === 0 ? (
+                                <div className="h-full w-full flex flex-col items-center justify-center bg-muted/30 rounded-lg border border-dashed border-muted-foreground/20">
+                                    <TrendingDown className="h-6 w-6 text-muted-foreground/30 mb-2" />
+                                    <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium text-center px-4">
+                                        Esperando primer check-in
+                                    </p>
+                                </div>
+                            ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={weightData}>
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fill: '#888' }}
+                                        />
+                                        <RechartsTooltip
+                                            contentStyle={{ borderRadius: '8px', border: 'none' }}
+                                            cursor={{ fill: '#f4f4f5' }}
+                                        />
+                                        <Bar dataKey="weight" radius={[4, 4, 0, 0]}>
+                                            {weightData.map((entry, index) => (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={index === weightData.length - 1 ? '#5254D9' : '#B2B3F5'}
+                                                />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -224,8 +238,13 @@ export function ProfileTab({ client }: ProfileTabProps) {
                         )}
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col">
-                        <div className="flex items-end gap-2 mb-4">
-                            <span className="text-3xl font-bold">{currentFat || '-'}%</span>
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="text-3xl font-bold">{currentFat ? `${currentFat}%` : 'N/A'}</span>
+                            {checkins.length === 0 && currentFat && (
+                                <Badge variant="outline" className="text-[10px] text-muted-foreground uppercase py-0 px-1.5 h-5">
+                                    Inicial
+                                </Badge>
+                            )}
                             {fatDiff !== 0 && (
                                 <Badge
                                     variant="secondary"
@@ -237,31 +256,40 @@ export function ProfileTab({ client }: ProfileTabProps) {
                             )}
                         </div>
                         <div className="h-[150px] w-full mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={bodyFatData}>
-                                    <defs>
-                                        <linearGradient id="colorFat" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#5254D9" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#5254D9" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <XAxis
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fontSize: 10, fill: '#888' }}
-                                    />
-                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none' }} />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="fat"
-                                        stroke="#5254D9"
-                                        fillOpacity={1}
-                                        fill="url(#colorFat)"
-                                        strokeWidth={3}
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
+                            {bodyFatData.length === 0 ? (
+                                <div className="h-full w-full flex flex-col items-center justify-center bg-muted/30 rounded-lg border border-dashed border-muted-foreground/20">
+                                    <TrendingUp className="h-6 w-6 text-muted-foreground/30 mb-2" />
+                                    <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium text-center px-4">
+                                        Sin datos de grasa corporal
+                                    </p>
+                                </div>
+                            ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={bodyFatData}>
+                                        <defs>
+                                            <linearGradient id="colorFat" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#5254D9" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#5254D9" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fill: '#888' }}
+                                        />
+                                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none' }} />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="fat"
+                                            stroke="#5254D9"
+                                            fillOpacity={1}
+                                            fill="url(#colorFat)"
+                                            strokeWidth={3}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

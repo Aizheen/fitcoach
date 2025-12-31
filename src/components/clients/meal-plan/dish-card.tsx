@@ -1,0 +1,104 @@
+'use client'
+
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Trash2, Utensils, Info } from "lucide-react"
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { RecipeCard } from "@/components/recipes/recipe-card"
+import { cn } from "@/lib/utils"
+
+interface DishCardProps {
+    item: any
+    onDelete: (id: string) => void
+}
+
+export function DishCard({ item, onDelete }: DishCardProps) {
+    const [detailOpen, setDetailOpen] = useState(false)
+    const displayName = item.custom_name || item.recipe?.name || "Sin nombre"
+
+    // Calculate stats
+    // Assuming recipe has macro data per serving or per 100g logic.
+    // Reusing the simple logic from before but validating inputs.
+    const hasRecipe = !!item.recipe
+
+    // Helper to safe multiply
+    const calc = (val: number | undefined | null) => {
+        if (!val) return 0
+        return Math.round(val * item.portions)
+    }
+
+    const kcal = hasRecipe ? calc(item.recipe.kcal_per_serving || item.recipe.macros_calories) : null
+    const protein = hasRecipe ? calc(item.recipe.protein_g_per_serving || item.recipe.macros_protein_g) : null
+    const carbs = hasRecipe ? calc(item.recipe.carbs_g_per_serving || item.recipe.macros_carbs_g) : null
+    const fat = hasRecipe ? calc(item.recipe.fat_g_per_serving || item.recipe.macros_fat_g) : null
+
+    // Check if we have valid macros to display (at least one > 0)
+    const showMacros = (protein || 0) + (carbs || 0) + (fat || 0) > 0
+
+    return (
+        <>
+            <div
+                className={cn(
+                    "relative flex items-center justify-between p-3 bg-card border rounded-md shadow-sm group transition-all",
+                    hasRecipe ? "hover:border-primary/50 cursor-pointer hover:bg-accent/5" : ""
+                )}
+                onClick={() => hasRecipe && setDetailOpen(true)}
+            >
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Utensils className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="font-medium text-sm truncate pr-2">{displayName}</p>
+
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
+                            {item.portions > 1 && <span className="font-medium text-foreground">{item.portions} porc.</span>}
+
+                            {kcal !== null && !isNaN(kcal) ? (
+                                <span>{kcal} kcal</span>
+                            ) : null}
+
+                            {showMacros && (
+                                <div className="flex items-center gap-2 border-l pl-2">
+                                    <span className="text-blue-600 font-medium">P: {protein}g</span>
+                                    <span className="text-amber-600 font-medium">C: {carbs}g</span>
+                                    <span className="text-rose-600 font-medium">G: {fat}g</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onDelete(item.id)
+                    }}
+                >
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+            </div>
+
+            {hasRecipe && (
+                <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+                    <DialogContent className="max-w-md sm:max-w-lg p-0 border-0 bg-transparent shadow-none">
+                        {/* Reusing RecipeCard for detail view. 
+                             We might need to wrap it to look good in a loose dialog or use its native style. 
+                             RecipeCard is designed as a card, so it fits well.
+                         */}
+                        <div className="bg-background rounded-2xl overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
+                            <RecipeCard recipe={item.recipe} />
+                            <div className="p-4 pt-0 flex justify-end">
+                                <Button variant="outline" onClick={() => setDetailOpen(false)}>Cerrar</Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+        </>
+    )
+}
