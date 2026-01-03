@@ -1,9 +1,23 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { WeeklyMealPlanContainer } from '../meal-plan/weekly-meal-plan-container'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Pencil, Save, X, Loader2 } from 'lucide-react'
+import { updateClientAction } from '@/app/(dashboard)/clients/actions'
+import { toast } from 'sonner'
 
 export function DietTab({ client }: { client: any }) {
+    const [isEditing, setIsEditing] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [formData, setFormData] = useState({
+        target_calories: client.target_calories || 0,
+        target_protein: client.target_protein || 0,
+        target_carbs: client.target_carbs || 0,
+        target_fats: client.target_fats || 0
+    })
 
     // Prepare read-only data
     const preferenceLabel = client.dietary_preference
@@ -14,35 +28,146 @@ export function DietTab({ client }: { client: any }) {
         ? client.allergens.map((a: string) => a.charAt(0).toUpperCase() + a.slice(1)).join(", ")
         : "Ninguno"
 
+    const handleEdit = () => {
+        setFormData({
+            target_calories: client.target_calories || 0,
+            target_protein: client.target_protein || 0,
+            target_carbs: client.target_carbs || 0,
+            target_fats: client.target_fats || 0
+        })
+        setIsEditing(true)
+    }
+
+    const handleSave = async () => {
+        setIsLoading(true)
+        try {
+            const result = await updateClientAction(client.id, {
+                ...formData,
+                macros_is_manual: true
+            })
+            if (result?.error) {
+                toast.error(result.error)
+            } else {
+                toast.success("Objetivos actualizados correctamente")
+                setIsEditing(false)
+            }
+        } catch (error) {
+            toast.error("Error al guardar los cambios")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: parseInt(value) || 0 }))
+    }
+
     return (
         <div className="space-y-6">
             {/* Macronutrients Summary */}
             <Card className="bg-primary/5 border-primary/20">
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                        Objetivos Nutricionales
-                        <span className="text-xs font-normal text-muted-foreground bg-background px-2 py-1 rounded-full border">
-                            Calculado automáticamente
-                        </span>
+                    <CardTitle className="text-lg font-bold flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            Objetivos Nutricionales
+                            <span className="text-xs font-normal text-muted-foreground bg-background px-2 py-1 rounded-full border">
+                                {client.macros_is_manual ? 'Personalizado' : 'Calculado automáticamente'}
+                            </span>
+                        </div>
+                        {!isEditing ? (
+                            <Button variant="ghost" size="sm" onClick={handleEdit} className="h-8 w-8 p-0">
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                        ) : (
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                                    <X className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={handleSave} disabled={isLoading} className="h-8 w-8 p-0 text-primary hover:text-primary">
+                                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                </Button>
+                            </div>
+                        )}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                         <div className="p-3 bg-background rounded-lg border shadow-sm">
-                            <div className="text-2xl font-bold text-primary">{client.target_calories || 0}</div>
-                            <div className="text-xs text-muted-foreground uppercase font-semibold">Kcal</div>
+                            {isEditing ? (
+                                <div className="space-y-1">
+                                    <Input
+                                        type="number"
+                                        name="target_calories"
+                                        value={formData.target_calories}
+                                        onChange={handleChange}
+                                        className="h-8 text-center text-lg font-bold"
+                                    />
+                                    <div className="text-[10px] text-muted-foreground uppercase font-semibold">Kcal</div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="text-2xl font-bold text-primary">{client.target_calories || 0}</div>
+                                    <div className="text-xs text-muted-foreground uppercase font-semibold">Kcal</div>
+                                </>
+                            )}
                         </div>
                         <div className="p-3 bg-background rounded-lg border shadow-sm">
-                            <div className="text-2xl font-bold">{client.target_protein || 0}g</div>
-                            <div className="text-xs text-muted-foreground uppercase font-semibold">Proteína</div>
+                            {isEditing ? (
+                                <div className="space-y-1">
+                                    <Input
+                                        type="number"
+                                        name="target_protein"
+                                        value={formData.target_protein}
+                                        onChange={handleChange}
+                                        className="h-8 text-center text-lg font-bold"
+                                    />
+                                    <div className="text-[10px] text-muted-foreground uppercase font-semibold">Proteína (g)</div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="text-2xl font-bold">{client.target_protein || 0}g</div>
+                                    <div className="text-xs text-muted-foreground uppercase font-semibold">Proteína</div>
+                                </>
+                            )}
                         </div>
                         <div className="p-3 bg-background rounded-lg border shadow-sm">
-                            <div className="text-2xl font-bold">{client.target_carbs || 0}g</div>
-                            <div className="text-xs text-muted-foreground uppercase font-semibold">Carbos</div>
+                            {isEditing ? (
+                                <div className="space-y-1">
+                                    <Input
+                                        type="number"
+                                        name="target_carbs"
+                                        value={formData.target_carbs}
+                                        onChange={handleChange}
+                                        className="h-8 text-center text-lg font-bold"
+                                    />
+                                    <div className="text-[10px] text-muted-foreground uppercase font-semibold">Carbos (g)</div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="text-2xl font-bold">{client.target_carbs || 0}g</div>
+                                    <div className="text-xs text-muted-foreground uppercase font-semibold">Carbos</div>
+                                </>
+                            )}
                         </div>
                         <div className="p-3 bg-background rounded-lg border shadow-sm">
-                            <div className="text-2xl font-bold">{client.target_fats || 0}g</div>
-                            <div className="text-xs text-muted-foreground uppercase font-semibold">Grasas</div>
+                            {isEditing ? (
+                                <div className="space-y-1">
+                                    <Input
+                                        type="number"
+                                        name="target_fats"
+                                        value={formData.target_fats}
+                                        onChange={handleChange}
+                                        className="h-8 text-center text-lg font-bold"
+                                    />
+                                    <div className="text-[10px] text-muted-foreground uppercase font-semibold">Grasas (g)</div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="text-2xl font-bold">{client.target_fats || 0}g</div>
+                                    <div className="text-xs text-muted-foreground uppercase font-semibold">Grasas</div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </CardContent>

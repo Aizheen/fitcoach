@@ -150,7 +150,8 @@ export async function createClientAction(formData: FormData) {
         meals_per_day,
         diet_experience,
 
-        status: 'active'
+        status: 'active',
+        macros_is_manual: false
     }
 
     console.log('Creating client with data:', JSON.stringify(insertData, null, 2))

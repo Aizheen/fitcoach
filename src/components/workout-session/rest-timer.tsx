@@ -187,7 +187,7 @@ export function RestTimer({
             {/* Rest toggle row */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
-                    <button className="flex items-center gap-2 text-blue-500 hover:text-blue-600 transition-colors">
+                    <button className="flex items-center gap-2 transition-colors hover:opacity-80" style={{ color: '#5254D9' }}>
                         <Timer className="h-4 w-4" />
                         <span className="text-sm font-medium">
                             Descanso: {enabled ? `${seconds}s` : 'APAGADO'}

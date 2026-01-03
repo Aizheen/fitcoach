@@ -137,6 +137,7 @@ export function TrainingTab({ client }: TrainingTabProps) {
                                 onDelete={() => handleDelete(workout.id)}
                                 onView={() => setViewingWorkout(workout)}
                                 onDownload={() => handleDownloadWorkout(workout)}
+                                onStart={() => handleStartSession(workout.id)}
                             />
                         ))}
                         {workouts.length === 0 && (

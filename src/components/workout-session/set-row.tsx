@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Check, MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { Check, Pencil, Trash2 } from 'lucide-react'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -78,30 +78,22 @@ export function SetRow({
     }
 
     return (
-        <div
-            className={cn(
-                "grid grid-cols-[40px_1fr_80px_60px_50px] items-center gap-2 px-3 py-3 border-b border-border/50 last:border-0",
-                isCompleted && "bg-muted/30"
-            )}
-        >
+        <div className={cn("grid grid-cols-[40px_1fr_70px_60px_40px] items-center gap-2 py-3 border-b border-border/50 last:border-0")}>
             {/* Set Number */}
-            <span className={cn(
-                "text-lg font-semibold",
-                isCompleted ? "text-blue-500" : "text-muted-foreground"
-            )}>
+            <span className="text-sm font-semibold text-center">
                 {setNumber}
             </span>
 
             {/* Previous Data */}
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground text-center">
                 {previousData
-                    ? `${previousData.weight}kg x ${previousData.reps}`
+                    ? `${previousData.weight}kg x${previousData.reps}`
                     : '-'
                 }
             </span>
 
             {/* Weight Input */}
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center relative">
                 <Input
                     type="number"
                     value={weight}
@@ -111,11 +103,11 @@ export function SetRow({
                     step={0.5}
                     min={0}
                     className={cn(
-                        "h-9 w-full text-center font-medium text-base",
-                        "border-0 bg-transparent focus-visible:ring-0",
-                        !isEditing && "opacity-70"
+                        "h-8 w-full text-center font-medium bg-transparent border-none p-0 focus-visible:ring-0",
+                        !isEditing && "text-foreground"
                     )}
                 />
+                <span className="text-xs text-muted-foreground absolute right-0 pointer-events-none">kg</span>
             </div>
 
             {/* Reps Input */}
@@ -128,9 +120,8 @@ export function SetRow({
                     disabled={!isEditing}
                     min={0}
                     className={cn(
-                        "h-9 w-full text-center font-medium text-base",
-                        "border-0 bg-transparent focus-visible:ring-0",
-                        !isEditing && "opacity-70"
+                        "h-8 w-full text-center font-medium bg-transparent border-none p-0 focus-visible:ring-0",
+                        !isEditing && "text-foreground"
                     )}
                 />
             </div>
@@ -142,22 +133,19 @@ export function SetRow({
                         variant="ghost"
                         size="icon"
                         onClick={handleComplete}
-                        className={cn(
-                            "h-9 w-9 rounded-md",
-                            "bg-muted hover:bg-muted-foreground/20"
-                        )}
+                        className="h-8 w-8 rounded-md bg-muted hover:bg-muted-foreground/20 text-muted-foreground"
                     >
-                        <Check className="h-5 w-5 text-muted-foreground" />
+                        <Check className="h-4 w-4" />
                     </Button>
                 ) : (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
-                                variant="ghost"
+                                variant="default"
                                 size="icon"
-                                className="h-9 w-9 rounded-md bg-green-500/20"
+                                className="h-8 w-8 rounded-md bg-foreground hover:bg-foreground/90 text-background"
                             >
-                                <Check className="h-5 w-5 text-green-600" />
+                                <Check className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
