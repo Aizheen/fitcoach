@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Check, ChevronsUpDown, UserCheck } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Search, UserCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export function ClientSelectorDialog({
@@ -21,6 +21,7 @@ export function ClientSelectorDialog({
 }) {
     const [open, setOpen] = useState(false)
     const [clients, setClients] = useState<any[]>([])
+    const [searchQuery, setSearchQuery] = useState('')
     const router = useRouter()
 
     useEffect(() => {
@@ -48,6 +49,10 @@ export function ClientSelectorDialog({
         }
     }
 
+    const filteredClients = clients.filter(client =>
+        client.full_name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -57,30 +62,53 @@ export function ClientSelectorDialog({
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[400px]">
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Seleccionar Asesorado</DialogTitle>
                 </DialogHeader>
-                <Command className="border rounded-md">
-                    <CommandInput placeholder="Buscar asesorado..." />
-                    <CommandEmpty>No se encontraron resultados.</CommandEmpty>
-                    <CommandGroup className="max-h-[300px] overflow-y-auto">
-                        {clients.map((client) => (
-                            <CommandItem
-                                key={client.id}
-                                value={client.full_name}
-                                onSelect={() => handleSelect(client.id)}
-                            >
-                                <Check
-                                    className={cn(
-                                        "mr-2 h-4 w-4 opacity-0"
-                                    )}
-                                />
-                                {client.full_name}
-                            </CommandItem>
-                        ))}
-                    </CommandGroup>
-                </Command>
+
+                <div className="relative my-2">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar asesorado..."
+                        className="pl-9"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+
+                <div className="flex-1 overflow-y-auto min-h-[300px] p-1">
+                    {filteredClients.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                            No se encontraron resultados
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {filteredClients.map((client) => (
+                                <Card
+                                    key={client.id}
+                                    className="cursor-pointer hover:border-primary hover:bg-muted/50 transition-all p-4 flex flex-col items-center gap-3 text-center group"
+                                    onClick={() => handleSelect(client.id)}
+                                >
+                                    <Avatar className="h-16 w-16 border-2 border-transparent group-hover:border-primary/20 transition-all">
+                                        <AvatarImage src={`https://avatar.vercel.sh/${client.id}.png`} alt={client.full_name} />
+                                        <AvatarFallback className="text-lg bg-primary/10 text-primary">
+                                            {client.full_name.charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="space-y-1">
+                                        <p className="font-medium leading-none group-hover:text-primary transition-colors">
+                                            {client.full_name}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Ver plan
+                                        </p>
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </DialogContent>
         </Dialog>
     )

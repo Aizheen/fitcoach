@@ -65,6 +65,7 @@ export function SettingsTab({ client }: { client: any }) {
             target_protein: formData.target_protein ? parseInt(formData.target_protein) : null,
             target_carbs: formData.target_carbs ? parseInt(formData.target_carbs) : null,
             target_fats: formData.target_fats ? parseInt(formData.target_fats) : null,
+            macros_is_manual: true,
         }
 
         const result = await updateClientAction(client.id, dataToUpdate)
@@ -244,7 +245,12 @@ export function SettingsTab({ client }: { client: any }) {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Objetivos Nutricionales</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                Objetivos Nutricionales
+                                <span className="text-xs font-normal text-muted-foreground bg-background px-2 py-1 rounded-full border">
+                                    {client.macros_is_manual ? 'Personalizado' : 'Calculado automáticamente'}
+                                </span>
+                            </CardTitle>
                             <CardDescription>Macronutrientes diarios calculados o personalizados.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-4 md:grid-cols-4">

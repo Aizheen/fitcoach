@@ -23,9 +23,9 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
     return (
         <div className="min-h-screen bg-background pb-24">
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-background border-b">
-                <div className="flex items-center justify-between p-4">
+            {/* Header - Fixed on mobile, proper stacking */}
+            <div className="fixed top-14 left-0 right-0 z-30 bg-background border-b px-4 py-4 md:static md:border-b-0 md:bg-transparent md:mb-6 md:p-0">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Link href="/">
                             <Button variant="ghost" size="icon">
@@ -50,12 +50,11 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 </div>
             </div>
 
-            {/* Exercise List - All exercises in one scrollable view */}
-            <div className="p-4">
-                <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
-                    Ejercicios ({exercises.length})
-                </h2>
+            {/* Spacer for fixed header on mobile */}
+            <div className="h-[84px] md:hidden" />
 
+            {/* Exercise List - All exercises in one scrollable view */}
+            <div className="p-4 pt-0 md:p-4">
                 <SessionExerciseList
                     sessionId={id}
                     exercises={exercises}
