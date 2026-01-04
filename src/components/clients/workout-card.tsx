@@ -90,7 +90,7 @@ export function WorkoutCard({ workout, onEdit, onDelete, onView, onDownload, onS
             {onStart && (
                 <CardFooter className="p-4 pt-0 mt-auto">
                     <Button
-                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground relative z-10"
+                        className="w-full bg-[#5254D9] hover:bg-[#4547b8] text-white relative z-10"
                         onClick={(e) => {
                             e.stopPropagation();
                             onStart();
